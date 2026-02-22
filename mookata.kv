@@ -1,0 +1,162 @@
+<WindowManager>:
+    MainMenuScreen:
+        name: "menu"
+    SettingsScreen:
+        name: "settings"
+    GameScreen:
+        name: "game"
+    GameOverScreen:
+        name: "gameover"
+
+<MainMenuScreen>:
+    FloatLayout:
+        canvas.before:
+            Color:
+                rgba: 0.9, 0.4, 0.2, 1
+            Rectangle:
+                pos: self.pos
+                size: self.size
+                
+        Label:
+            text: "MOOKATA NINJA"
+            font_size: '50sp'
+            bold: True
+            pos_hint: {"center_x": 0.5, "center_y": 0.8}
+            
+        Button:
+            text: "START GAME"
+            font_size: '20sp'
+            size_hint: 0.3, 0.15
+            pos_hint: {"center_x": 0.5, "center_y": 0.5}
+            on_release: app.root.current = "game"
+                
+        Button:
+            text: "SETTINGS"
+            font_size: '20sp'
+            size_hint: 0.3, 0.15
+            pos_hint: {"center_x": 0.5, "center_y": 0.3}
+            on_release: app.root.current = "settings"
+            
+        Button:
+            text: "EXIT"
+            font_size: '20sp'
+            background_color: 1, 0, 0, 1
+            size_hint: 0.3, 0.15
+            pos_hint: {"center_x": 0.5, "center_y": 0.1}
+            on_release: app.stop()
+
+<SettingsScreen>:
+    FloatLayout:
+        canvas.before:
+            Color:
+                rgba: 0.2, 0.2, 0.2, 1
+            Rectangle:
+                pos: self.pos
+                size: self.size
+                
+        Label:
+            text: "SETTINGS"
+            font_size: '40sp'
+            pos_hint: {"center_x": 0.5, "center_y": 0.8}
+            
+        Slider:
+            min: 0
+            max: 100
+            value: 50
+            size_hint: 0.5, 0.1
+            pos_hint: {"center_x": 0.5, "center_y": 0.6}
+            
+        CheckBox:
+            size_hint: 0.1, 0.1
+            pos_hint: {"center_x": 0.5, "center_y": 0.4}
+            
+        Button:
+            text: "BACK"
+            font_size: '20sp'
+            size_hint: 0.2, 0.15
+            pos_hint: {"center_x": 0.5, "center_y": 0.2}
+            on_release: app.root.current = "menu"
+
+<GameScreen>:
+    FloatLayout:
+        canvas.before:
+            Color:
+                rgba: 0.15, 0.15, 0.15, 1
+            Rectangle:
+                pos: self.pos
+                size: self.size
+                
+        Label:
+            text: "Score: 0"
+            font_size: '30sp'
+            pos_hint: {"x": 0.05, "top": 0.95}
+            size_hint: None, None
+            
+        BoxLayout:
+            orientation: 'horizontal'
+            size_hint: None, None
+            size: 150, 50
+            pos_hint: {"right": 0.95, "top": 0.95}
+            Label:
+                text: "[H]"
+                color: 1, 0, 0, 1
+            Label:
+                text: "[H]"
+                color: 1, 0, 0, 1
+            Label:
+                text: "[H]"
+                color: 1, 0, 0, 1
+                
+        Button:
+            text: "Pause"
+            size_hint: 0.15, 0.1
+            pos_hint: {"right": 0.95, "top": 0.8}
+
+        Button:
+            text: "Die! (Test)"
+            size_hint: 0.2, 0.1
+            pos_hint: {"center_x": 0.5, "center_y": 0.1}
+            on_release: app.root.current = "gameover"
+
+<GameOverScreen>:
+    BoxLayout:
+        orientation: "vertical"
+        padding: 50
+        spacing: 15
+        
+        Label:
+            text: "GAME OVER"
+            font_size: '60sp'
+            color: 1, 0.2, 0.2, 1
+            bold: True
+            
+        Label:
+            text: "Your Score: 0"
+            font_size: '35sp'
+            
+        TextInput:
+            hint_text: "Enter your name to save..."
+            size_hint_y: None
+            height: 60
+            multiline: False
+            font_size: '24sp'
+            
+        Button:
+            text: "SAVE SCORE"
+            size_hint_y: None
+            height: 60
+            font_size: '20sp'
+            
+        Button:
+            text: "PLAY AGAIN"
+            size_hint_y: None
+            height: 60
+            font_size: '20sp'
+            on_release: app.root.current = "game"
+            
+        Button:
+            text: "MAIN MENU"
+            size_hint_y: None
+            height: 60
+            font_size: '20sp'
+            on_release: app.root.current = "menu"
