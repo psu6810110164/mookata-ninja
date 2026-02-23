@@ -22,6 +22,10 @@ class GameScreen(Screen):
         print(f"ลากนิ้วไปที่: {touch.pos}")
         return super().on_touch_move(touch)
 
+    def on_touch_up(self, touch):
+        print("ปล่อยนิ้วแล้ว")
+        return super().on_touch_up(touch)
+
 class GameOverScreen(Screen):
     pass
 
