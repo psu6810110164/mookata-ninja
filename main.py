@@ -32,7 +32,7 @@ class GameScreen(Screen):
         last_x, last_y = touch.ud['trail'][-1]
         if math.hypot(touch.x - last_x, touch.y - last_y) > 15:
             touch.ud['trail'].append((touch.x, touch.y))
-            if len(touch.ud['trail']) > 12:
+            if len(touch.ud['trail']) > 15:
                 touch.ud['trail'].pop(0)
             self.update_slash(touch)
         return super().on_touch_move(touch)
@@ -49,8 +49,10 @@ class GameScreen(Screen):
             x, y = trail[i]
             progress = i / (len(trail) - 1)
             
-            thick_glow = math.sin(progress * math.pi) * 35
-            thick_core = math.sin(progress * math.pi) * 12
+            curve = math.sin((progress ** 2) * math.pi)
+            
+            thick_glow = (curve * 18) + (4 * (1 - progress))
+            thick_core = (curve * 5) + (1.5 * (1 - progress))
             
             if i < len(trail) - 1:
                 dx = trail[i+1][0] - x
