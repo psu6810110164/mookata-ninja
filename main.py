@@ -4,6 +4,8 @@ from kivy.uix.screenmanager import ScreenManager, Screen
 from kivy.lang import Builder
 from kivy.core.window import Window
 from kivy.graphics import Color, Mesh
+from kivy.clock import Clock
+from game_objects import FallingItem
 
 Window.size = (800, 450)
 
@@ -16,6 +18,32 @@ class SettingsScreen(Screen):
     pass
 
 class GameScreen(Screen):
+    game_objects = []
+
+    def on_enter(self):
+        self.game_objects = [] 
+        Clock.schedule_interval(self.game_loop, 1.0/60.0)
+        Clock.schedule_interval(self.spawn_item, 2.0)
+
+    def on_leave(self):
+        Clock.unschedule(self.game_loop)
+        Clock.unschedule(self.spawn_item)
+        for obj in self.game_objects:
+            self.remove_widget(obj)
+        self.game_objects.clear()
+
+    def spawn_item(self, dt):
+        item = FallingItem()
+        self.add_widget(item)
+        self.game_objects.append(item)
+
+    def game_loop(self, dt):
+        for item in self.game_objects[:]:
+            item.update()
+            if item.y < -200:
+                self.remove_widget(item)
+                self.game_objects.remove(item)
+
     def on_touch_down(self, touch):
         touch.ud['trail'] = [(touch.x, touch.y)]
         with self.canvas:
