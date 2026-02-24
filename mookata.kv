@@ -142,28 +142,38 @@
             bold: True
             
         Label:
+            id: score_label       
             text: "Your Score: 0"
             font_size: '35sp'
+
+        Label:
+            id: highscore_label   
+            text: "High Score: --"
+            font_size: '25sp'
+            color: 1, 0.8, 0.2, 1 
             
         TextInput:
+            id: player_name       
             hint_text: "Enter your name to save..."
             size_hint_y: None
             height: 60
             multiline: False
             font_size: '24sp'
+            on_text_validate: root.save_score()  
             
         Button:
             text: "SAVE SCORE"
             size_hint_y: None
             height: 60
             font_size: '20sp'
+            on_release: root.save_score()        
             
         Button:
             text: "PLAY AGAIN"
             size_hint_y: None
             height: 60
             font_size: '20sp'
-            on_release: app.root.current = "game"
+            on_release: root.restart_game()      
             
         Button:
             text: "MAIN MENU"
