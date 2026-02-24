@@ -16,6 +16,10 @@
             Rectangle:
                 pos: self.pos
                 size: self.size
+        Image:
+            source: 'assets/logoninja.jpg'
+            size_hint: 0.5, 0.4
+            pos_hint: {"center_x": 0.5, "center_y": 0.8}
                 
         Label:
             text: "MOOKATA NINJA"
@@ -93,19 +97,30 @@
             size_hint: None, None
             
         BoxLayout:
+            id: lives_layout
             orientation: 'horizontal'
             size_hint: None, None
-            size: 150, 50
-            pos_hint: {"right": 0.95, "top": 0.95}
-            Label:
-                text: "[H]"
-                color: 1, 0, 0, 1
-            Label:
-                text: "[H]"
-                color: 1, 0, 0, 1
-            Label:
-                text: "[H]"
-                color: 1, 0, 0, 1
+            size: 200, 60
+            pos_hint: {"right": 0.98, "top": 0.98}
+            spacing: 10
+            
+            Image:
+                id: life_1
+                source: 'assets/images/heart_full.png'
+                allow_stretch: True
+                keep_ratio: True
+                
+            Image:
+                id: life_2
+                source: 'assets/images/heart_full.png'
+                allow_stretch: True
+                keep_ratio: True
+                
+            Image:
+                id: life_3
+                source: 'assets/images/heart_full.png'
+                allow_stretch: True
+                keep_ratio: True
                 
         Button:
             text: "Pause"
