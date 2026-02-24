@@ -8,8 +8,6 @@ from kivy.graphics import Color, Mesh
 from kivy.clock import Clock
 from game_objects import FallingItem
 
-
-
 Builder.load_file('mookata.kv')
 
 class MainMenuScreen(Screen):
@@ -21,10 +19,12 @@ class SettingsScreen(Screen):
 class GameScreen(Screen):
     game_objects = []
     time_elapsed = 0
+    score = 0
 
     def on_enter(self):
         self.game_objects = []
         self.time_elapsed = 0
+        self.score = 0
         Clock.schedule_interval(self.game_loop, 1.0/60.0)
         self.spawn_next_item(0)
 
@@ -63,12 +63,26 @@ class GameScreen(Screen):
         self.time_elapsed += dt
         for item in self.game_objects[:]:
             item.update()
-            if item.y < -200:
+            if item.y < -item.height * 2:
                 self.remove_widget(item)
                 self.game_objects.remove(item)
 
+    def check_collision(self, touch):
+        for item in self.game_objects[:]:
+            if item.collide_point(touch.x, touch.y): 
+                if item.is_bomb:
+                    self.test_damage() 
+                    self.remove_widget(item)
+                    self.game_objects.remove(item)
+                else:
+                    self.score += 10
+                    print(f"Score: {self.score}")
+                    self.remove_widget(item)
+                    self.game_objects.remove(item)
+
     def on_touch_down(self, touch):
         touch.ud['trail'] = [(touch.x, touch.y)]
+        self.check_collision(touch)
         with self.canvas:
             touch.ud['color_glow'] = Color(1, 0.4, 0, 0.4)
             touch.ud['mesh_glow'] = Mesh(mode='triangle_strip')
@@ -77,6 +91,7 @@ class GameScreen(Screen):
         return super().on_touch_down(touch)
 
     def on_touch_move(self, touch):
+        self.check_collision(touch)
         if 'trail' not in touch.ud: return super().on_touch_move(touch)
         last_x, last_y = touch.ud['trail'][-1]
         if math.hypot(touch.x - last_x, touch.y - last_y) > 15:
@@ -128,6 +143,17 @@ class GameScreen(Screen):
             self.ids.life_3.source = 'assets/images/heart_full.png'
         else:
             self.ids.life_3.source = 'assets/images/heart_empty.png'
+
+    def test_damage(self):
+        if not hasattr(self, 'temp_hp'):
+            self.temp_hp = 3
+        self.temp_hp -= 1
+        print(f"HP Left: {self.temp_hp}")
+        self.update_lives(self.temp_hp)
+        if self.temp_hp <= 0:
+            print("Game Over")
+            self.temp_hp = 3
+            self.update_lives(3)
 
 class GameOverScreen(Screen):
     pass
