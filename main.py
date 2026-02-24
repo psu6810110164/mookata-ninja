@@ -86,6 +86,22 @@ class GameScreen(Screen):
             self.canvas.remove(touch.ud['mesh_core'])
         return super().on_touch_up(touch)
 
+    def update_lives(self, current_lives):
+        if current_lives >= 1:
+            self.ids.life_1.source = 'assets/images/heart_full.png'
+        else:
+            self.ids.life_1.source = 'assets/images/heart_empty.png'
+
+        if current_lives >= 2:
+            self.ids.life_2.source = 'assets/images/heart_full.png'
+        else:
+            self.ids.life_2.source = 'assets/images/heart_empty.png'
+
+        if current_lives >= 3:
+            self.ids.life_3.source = 'assets/images/heart_full.png'
+        else:
+            self.ids.life_3.source = 'assets/images/heart_empty.png'
+
 class GameOverScreen(Screen):
     pass
 
