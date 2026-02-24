@@ -67,6 +67,8 @@ class GameScreen(Screen):
         for item in self.game_objects[:]:
             item.update()
             if item.y < -item.height * 2:
+                if not item.is_bomb:
+                    self.test_damage()
                 self.remove_widget(item)
                 self.game_objects.remove(item)
 
@@ -153,15 +155,28 @@ class GameScreen(Screen):
         self.temp_hp -= 1
         print(f"HP Left: {self.temp_hp}")
         self.update_lives(self.temp_hp)
+        
         if self.temp_hp <= 0:
             print("Game Over")
-            self.temp_hp = 3
-            self.update_lives(3)
+            game_over_screen = self.manager.get_screen('gameover')
+            game_over_screen.ids.score_label.text = f"Your Score: {self.score}"
+            game_over_screen.final_score = self.score 
+            self.manager.current = "gameover"
+    
+    def on_enter(self):
+        self.game_objects = []
+        self.time_elapsed = 0
+        self.score = 0
+        self.temp_hp = 3  
+        self.update_lives(self.temp_hp) 
+        Clock.schedule_interval(self.game_loop, 1.0/60.0)
+        self.spawn_next_item(0)
 
 class GameOverScreen(Screen):
+    final_score = 0  
+
     def on_enter(self):
         self.load_highscore()
-
     def load_highscore(self):
         if os.path.exists("highscore.txt"):
             with open("highscore.txt", "r", encoding="utf-8") as f:
@@ -175,11 +190,8 @@ class GameOverScreen(Screen):
         name = self.ids.player_name.text
         if not name.strip():
             name = "Unknown Ninja"
-            
-        current_score = 0 
-        
         with open("highscore.txt", "a", encoding="utf-8") as f:
-            f.write(f"{name}: {current_score}\n")
+            f.write(f"{name}: {self.final_score}\n")
             
         self.ids.player_name.text = ""  
         self.load_highscore()
