@@ -82,6 +82,7 @@ class GameScreen(Screen):
                 else:
                     self.score += 10
                     print(f"Score: {self.score}")
+                    self.ids.current_score_label.text = f"Score: {self.score}"
                     self.remove_widget(item)
                     self.game_objects.remove(item)
 
@@ -169,6 +170,7 @@ class GameScreen(Screen):
         self.score = 0
         self.temp_hp = 3  
         self.update_lives(self.temp_hp) 
+        self.ids.current_score_label.text = "Score: 0" 
         Clock.schedule_interval(self.game_loop, 1.0/60.0)
         self.spawn_next_item(0)
 
