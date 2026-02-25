@@ -34,7 +34,9 @@ class GameScreen(Screen):
         self.combo_count = 0
         self.last_hit_time = 0
         self.temp_hp = 3
-        self.ids.combo_label.text = ""
+        self.ids.combo_shadow.text = ""
+        self.ids.combo_main.text = ""
+        self.ids.combo_highlight.text = ""
         self.update_lives(self.temp_hp)
         Clock.schedule_interval(self.game_loop, 1.0/60.0)
         self.spawn_next_item(0)
@@ -85,7 +87,9 @@ class GameScreen(Screen):
                 if item.is_bomb:
                     self.test_damage() 
                     self.combo_count = 0
-                    self.ids.combo_label.text = ""
+                    self.ids.combo_shadow.text = ""
+                    self.ids.combo_main.text = ""
+                    self.ids.combo_highlight.text = ""
                     self.remove_widget(item)
                     self.game_objects.remove(item)
                 else:
@@ -100,20 +104,46 @@ class GameScreen(Screen):
                     print(f"Score: {self.score} (Combo x{self.combo_count})")
                     
                     if self.combo_count > 1:
-                        self.show_combo_text()
+                        self.show_combo_text(touch.x, touch.y)
 
                     self.remove_widget(item)
                     self.game_objects.remove(item)
 
-    def show_combo_text(self):
-        self.ids.combo_label.text = f"{self.combo_count}x COMBO!"
-        self.ids.combo_label.color = (1, 0.8, 0, 1)
+    def show_combo_text(self, item_x, item_y):
+        txt = f"{self.combo_count}x\nCOMBO!"
+        
+        margin = 100
+        safe_x = max(margin, min(item_x, Window.width - margin))
+        safe_y = max(margin, min(item_y + 80, Window.height - margin))
+
+        fs = '70sp' if self.combo_count >= 5 else '60sp'
+
+        self.ids.combo_shadow.text = txt
+        self.ids.combo_shadow.font_size = fs
+        self.ids.combo_shadow.center_x = safe_x
+        self.ids.combo_shadow.center_y = safe_y - 1
+        self.ids.combo_shadow.color = (0, 0, 0.5, 1)
+
+        self.ids.combo_main.text = txt
+        self.ids.combo_main.font_size = fs
+        self.ids.combo_main.center_x = safe_x
+        self.ids.combo_main.center_y = safe_y
+        self.ids.combo_main.color = (0, 0.6, 1, 1)
+
+        self.ids.combo_highlight.text = txt
+        self.ids.combo_highlight.font_size = fs
+        self.ids.combo_highlight.center_x = safe_x
+        self.ids.combo_highlight.center_y = safe_y + 1
+        self.ids.combo_highlight.color = (0.8, 1, 1, 1)
+
         Clock.unschedule(self.hide_combo_text)
         Clock.schedule_once(self.hide_combo_text, 1.0)
 
     def hide_combo_text(self, dt):
-        self.ids.combo_label.text = ""
-        self.ids.combo_label.color = (1, 0.8, 0, 0)
+        for lbl_id in ['combo_shadow', 'combo_main', 'combo_highlight']:
+            lbl = self.ids[lbl_id]
+            lbl.text = ""
+            lbl.color = (0, 0, 0, 0)
 
     def on_touch_down(self, touch):
         touch.ud['trail'] = [(touch.x, touch.y)]
