@@ -1,15 +1,17 @@
 import math
+import time
 from random import randint, random
 from kivy.app import App
 from kivy.uix.screenmanager import ScreenManager, Screen
 from kivy.lang import Builder
 from kivy.core.window import Window
 import os
-
-Window.size = (800, 450)
 from kivy.graphics import Color, Mesh
 from kivy.clock import Clock
 from game_objects import FallingItem
+from kivy.animation import Animation
+
+Window.size = (800, 450)
 
 Builder.load_file('mookata.kv')
 
@@ -23,11 +25,20 @@ class GameScreen(Screen):
     game_objects = []
     time_elapsed = 0
     score = 0
+    combo_count = 0
+    last_hit_time = 0
 
     def on_enter(self):
         self.game_objects = []
         self.time_elapsed = 0
         self.score = 0
+        self.combo_count = 0
+        self.last_hit_time = 0
+        self.temp_hp = 3
+        self.ids.combo_shadow.text = ""
+        self.ids.combo_main.text = ""
+        self.ids.combo_highlight.text = ""
+        self.update_lives(self.temp_hp)
         Clock.schedule_interval(self.game_loop, 1.0/60.0)
         self.spawn_next_item(0)
 
@@ -67,24 +78,81 @@ class GameScreen(Screen):
         for item in self.game_objects[:]:
             item.update()
             if item.y < -item.height * 2:
-                if not item.is_bomb:
-                    self.test_damage()
                 self.remove_widget(item)
                 self.game_objects.remove(item)
 
     def check_collision(self, touch):
+        current_time = time.time()
         for item in self.game_objects[:]:
             if item.collide_point(touch.x, touch.y): 
                 if item.is_bomb:
                     self.test_damage() 
+                    self.combo_count = 0
+                    self.ids.combo_shadow.text = ""
+                    self.ids.combo_main.text = ""
+                    self.ids.combo_highlight.text = ""
                     self.remove_widget(item)
                     self.game_objects.remove(item)
                 else:
-                    self.score += 10
-                    print(f"Score: {self.score}")
-                    self.ids.current_score_label.text = f"Score: {self.score}"
+                    if current_time - self.last_hit_time < 1.0:
+                        self.combo_count += 1
+                    else:
+                        self.combo_count = 1
+                    
+                    self.last_hit_time = current_time
+                    points = 10 * self.combo_count
+                    self.score += points
+                    print(f"Score: {self.score} (Combo x{self.combo_count})")
+                    
+                    if self.combo_count > 1:
+                        self.show_combo_text(touch.x, touch.y)
+
                     self.remove_widget(item)
                     self.game_objects.remove(item)
+
+    def show_combo_text(self, item_x, item_y):
+        txt = f"{self.combo_count}x\nCOMBO!"
+        
+        margin = 100
+        safe_x = max(margin, min(item_x, Window.width - margin))
+        safe_y = max(margin, min(item_y + 80, Window.height - margin))
+
+        normal_size = 60
+        pop_size = 90
+
+        self.ids.combo_shadow.text = txt
+        self.ids.combo_shadow.center_x = safe_x
+        self.ids.combo_shadow.center_y = safe_y - 2
+        self.ids.combo_shadow.color = (0, 0, 0.5, 1)
+        self.ids.combo_shadow.font_size = normal_size # เริ่มที่ขนาดปกติ
+
+        self.ids.combo_main.text = txt
+        self.ids.combo_main.center_x = safe_x
+        self.ids.combo_main.center_y = safe_y
+        self.ids.combo_main.color = (0, 0.6, 1, 1)
+        self.ids.combo_main.font_size = normal_size
+
+        self.ids.combo_highlight.text = txt
+        self.ids.combo_highlight.center_x = safe_x
+        self.ids.combo_highlight.center_y = safe_y + 2
+        self.ids.combo_highlight.color = (0.8, 1, 1, 1)
+        self.ids.combo_highlight.font_size = normal_size
+
+        anim = Animation(font_size=pop_size, duration=0.1, t='out_back') + \
+               Animation(font_size=normal_size, duration=0.1)
+
+        anim.start(self.ids.combo_shadow)
+        anim.start(self.ids.combo_main)
+        anim.start(self.ids.combo_highlight)
+
+        Clock.unschedule(self.hide_combo_text)
+        Clock.schedule_once(self.hide_combo_text, 1.5)
+
+    def hide_combo_text(self, dt):
+        for lbl_id in ['combo_shadow', 'combo_main', 'combo_highlight']:
+            lbl = self.ids[lbl_id]
+            lbl.text = ""
+            lbl.color = (0, 0, 0, 0)
 
     def on_touch_down(self, touch):
         touch.ud['trail'] = [(touch.x, touch.y)]
@@ -160,25 +228,17 @@ class GameScreen(Screen):
         if self.temp_hp <= 0:
             print("Game Over")
             game_over_screen = self.manager.get_screen('gameover')
-            game_over_screen.ids.score_label.text = f"Your Score: {self.score}"
+            if hasattr(game_over_screen.ids, 'score_label'):
+                game_over_screen.ids.score_label.text = f"Your Score: {self.score}"
             game_over_screen.final_score = self.score 
             self.manager.current = "gameover"
-    
-    def on_enter(self):
-        self.game_objects = []
-        self.time_elapsed = 0
-        self.score = 0
-        self.temp_hp = 3  
-        self.update_lives(self.temp_hp) 
-        self.ids.current_score_label.text = "Score: 0" 
-        Clock.schedule_interval(self.game_loop, 1.0/60.0)
-        self.spawn_next_item(0)
 
 class GameOverScreen(Screen):
-    final_score = 0  
+    final_score = 0 
 
     def on_enter(self):
         self.load_highscore()
+
     def load_highscore(self):
         if os.path.exists("highscore.txt"):
             with open("highscore.txt", "r", encoding="utf-8") as f:
@@ -195,8 +255,9 @@ class GameOverScreen(Screen):
         with open("highscore.txt", "a", encoding="utf-8") as f:
             f.write(f"{name}: {self.final_score}\n")
             
-        self.ids.player_name.text = ""  
+        self.ids.player_name.text = "" 
         self.load_highscore()
+
     def restart_game(self):
         self.manager.current = "game"
 

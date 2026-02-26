@@ -118,7 +118,36 @@
                 source: 'assets/images/heart_full.png'
                 allow_stretch: True
                 keep_ratio: True
-                
+        
+        Label:
+            id: combo_shadow
+            text: ""
+            font_size: '60sp'
+            bold: True
+            halign: 'center'
+            color: 0, 0, 0.5, 1
+            pos: (-1000, -1000)
+            outline_color: 0, 0, 0, 1
+            outline_width: 5
+
+        Label:
+            id: combo_main
+            text: ""
+            font_size: '60sp'
+            bold: True
+            halign: 'center'
+            color: 0, 0.6, 1, 1
+            pos: (-1000, -1000)
+
+        Label:
+            id: combo_highlight
+            text: ""
+            font_size: '60sp'
+            bold: True
+            halign: 'center'
+            color: 0.8, 0.95, 1, 1
+            pos: (-1000, -1000)
+
         Button:
             text: "Pause"
             size_hint: 0.15, 0.1
@@ -143,18 +172,18 @@
             bold: True
             
         Label:
-            id: score_label       
+            id: score_label        
             text: "Your Score: 0"
             font_size: '35sp'
 
         Label:
-            id: highscore_label   
+            id: highscore_label    
             text: "High Score: --"
             font_size: '25sp'
             color: 1, 0.8, 0.2, 1 
             
         TextInput:
-            id: player_name       
+            id: player_name        
             hint_text: "Enter your name to save..."
             size_hint_y: None
             height: 60
