@@ -9,6 +9,7 @@ import os
 from kivy.graphics import Color, Mesh
 from kivy.clock import Clock
 from game_objects import FallingItem
+from kivy.animation import Animation
 
 Window.size = (800, 450)
 
@@ -116,28 +117,36 @@ class GameScreen(Screen):
         safe_x = max(margin, min(item_x, Window.width - margin))
         safe_y = max(margin, min(item_y + 80, Window.height - margin))
 
-        fs = '70sp' if self.combo_count >= 5 else '60sp'
+        normal_size = 60
+        pop_size = 90
 
         self.ids.combo_shadow.text = txt
-        self.ids.combo_shadow.font_size = fs
         self.ids.combo_shadow.center_x = safe_x
-        self.ids.combo_shadow.center_y = safe_y - 1
+        self.ids.combo_shadow.center_y = safe_y - 2
         self.ids.combo_shadow.color = (0, 0, 0.5, 1)
+        self.ids.combo_shadow.font_size = normal_size # เริ่มที่ขนาดปกติ
 
         self.ids.combo_main.text = txt
-        self.ids.combo_main.font_size = fs
         self.ids.combo_main.center_x = safe_x
         self.ids.combo_main.center_y = safe_y
         self.ids.combo_main.color = (0, 0.6, 1, 1)
+        self.ids.combo_main.font_size = normal_size
 
         self.ids.combo_highlight.text = txt
-        self.ids.combo_highlight.font_size = fs
         self.ids.combo_highlight.center_x = safe_x
-        self.ids.combo_highlight.center_y = safe_y + 1
+        self.ids.combo_highlight.center_y = safe_y + 2
         self.ids.combo_highlight.color = (0.8, 1, 1, 1)
+        self.ids.combo_highlight.font_size = normal_size
+
+        anim = Animation(font_size=pop_size, duration=0.1, t='out_back') + \
+               Animation(font_size=normal_size, duration=0.1)
+
+        anim.start(self.ids.combo_shadow)
+        anim.start(self.ids.combo_main)
+        anim.start(self.ids.combo_highlight)
 
         Clock.unschedule(self.hide_combo_text)
-        Clock.schedule_once(self.hide_combo_text, 1.0)
+        Clock.schedule_once(self.hide_combo_text, 1.5)
 
     def hide_combo_text(self, dt):
         for lbl_id in ['combo_shadow', 'combo_main', 'combo_highlight']:
