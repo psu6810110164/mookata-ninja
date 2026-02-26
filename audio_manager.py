@@ -2,9 +2,9 @@ from kivy.core.audio import SoundLoader
 
 class AudioManager:
     def __init__(self):
-        self.slash_sound = SoundLoader.load('assets/sounds/slash.wav')
-        self.sizzle_sound = SoundLoader.load('assets/sounds/sizzle.wav')
-        self.bg_music = SoundLoader.load('assets/sounds/bgm.wav')
+        self.slash_sound = SoundLoader.load('assets/sounds/slash.mp3')
+        self.sizzle_sound = SoundLoader.load('assets/sounds/sizzle.mp3')
+        self.bg_music = SoundLoader.load('assets/sounds/bgm.mp3')
 
     def play_slash(self):
         if self.slash_sound:
