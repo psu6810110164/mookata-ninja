@@ -124,7 +124,7 @@ class GameScreen(Screen):
         self.ids.combo_shadow.center_x = safe_x
         self.ids.combo_shadow.center_y = safe_y - 2
         self.ids.combo_shadow.color = (0, 0, 0.5, 1)
-        self.ids.combo_shadow.font_size = normal_size # เริ่มที่ขนาดปกติ
+        self.ids.combo_shadow.font_size = normal_size
 
         self.ids.combo_main.text = txt
         self.ids.combo_main.center_x = safe_x
@@ -157,20 +157,36 @@ class GameScreen(Screen):
     def on_touch_down(self, touch):
         touch.ud['trail'] = [(touch.x, touch.y)]
         self.check_collision(touch)
+        
         with self.canvas:
             touch.ud['color_glow'] = Color(1, 0.4, 0, 0.4)
             touch.ud['mesh_glow'] = Mesh(mode='triangle_strip')
             touch.ud['color_core'] = Color(1, 0.9, 0.2, 1)
             touch.ud['mesh_core'] = Mesh(mode='triangle_strip')
+            
+        touch.ud['decay_event'] = Clock.schedule_interval(
+            lambda dt: self.decay_trail(touch), 0.04
+        )
         return super().on_touch_down(touch)
+
+    def decay_trail(self, touch):
+        if 'trail' not in touch.ud: return
+        
+        if len(touch.ud['trail']) > 2:
+            touch.ud['trail'].pop(0)
+            self.update_slash(touch)
 
     def on_touch_move(self, touch):
         self.check_collision(touch)
         if 'trail' not in touch.ud: return super().on_touch_move(touch)
         last_x, last_y = touch.ud['trail'][-1]
-        if math.hypot(touch.x - last_x, touch.y - last_y) > 15:
+        
+        if math.hypot(touch.x - last_x, touch.y - last_y) > 10:
             touch.ud['trail'].append((touch.x, touch.y))
-            if len(touch.ud['trail']) > 15: touch.ud['trail'].pop(0)
+            
+            if len(touch.ud['trail']) > 12: 
+                touch.ud['trail'].pop(0)
+                
             self.update_slash(touch)
         return super().on_touch_move(touch)
 
@@ -178,25 +194,37 @@ class GameScreen(Screen):
         trail = touch.ud['trail']
         if len(trail) < 2: return
         v_glow, v_core, indices = [], [], []
+        
         for i in range(len(trail)):
             x, y = trail[i]
             progress = i / (len(trail) - 1)
             curve = math.sin((progress ** 2) * math.pi)
-            thick_glow = (curve * 18) + (4 * (1 - progress))
-            thick_core = (curve * 5) + (1.5 * (1 - progress))
+            
+            thick_glow = (curve * 25)
+            thick_core = (curve * 8)
+            
             if i < len(trail) - 1: dx, dy = trail[i+1][0] - x, trail[i+1][1] - y
             else: dx, dy = x - trail[i-1][0], y - trail[i-1][1]
+            
             length = math.hypot(dx, dy)
-            px, py = (-dy/length, dx/length) if length else (0,0)
+            if length > 0:
+                px, py = (-dy/length, dx/length)
+            else:
+                px, py = 1, 0
+
             v_glow.extend([x+px*thick_glow, y+py*thick_glow, 0, 0, x-px*thick_glow, y-py*thick_glow, 0, 0])
             v_core.extend([x+px*thick_core, y+py*thick_core, 0, 0, x-px*thick_core, y-py*thick_core, 0, 0])
             indices.extend([i*2, i*2+1])
+            
         touch.ud['mesh_glow'].vertices = v_glow
         touch.ud['mesh_glow'].indices = indices
         touch.ud['mesh_core'].vertices = v_core
         touch.ud['mesh_core'].indices = indices
 
     def on_touch_up(self, touch):
+        if 'decay_event' in touch.ud:
+            touch.ud['decay_event'].cancel()
+
         if 'mesh_glow' in touch.ud:
             self.canvas.remove(touch.ud['color_glow'])
             self.canvas.remove(touch.ud['mesh_glow'])
