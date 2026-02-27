@@ -134,9 +134,10 @@ class GameScreen(Screen):
         safe_x = max(margin, min(item_x, Window.width - margin))
         safe_y = max(margin, min(item_y + 80, Window.height - margin))
 
-        normal_size = 60
-        pop_size = 90
-
+        scale_factor = Window.height / 450.0 
+        normal_size = 50 * scale_factor
+        pop_size = 80 * scale_factor
+        
         self.ids.combo_shadow.text = txt
         self.ids.combo_shadow.center_x = safe_x
         self.ids.combo_shadow.center_y = safe_y - 2
