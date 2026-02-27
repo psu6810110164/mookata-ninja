@@ -99,7 +99,7 @@ class GameScreen(Screen):
         for item in self.game_objects[:]:
             if item.collide_point(touch.x, touch.y): 
                 if item.is_bomb:
-                    self.audio.play_sizzle()
+                    self.audio.play_bomb()
                     self.test_damage() 
                     self.combo_count = 0
                     self.ids.combo_shadow.text = ""
