@@ -11,6 +11,7 @@ from kivy.clock import Clock
 from game_objects import FallingItem
 from kivy.animation import Animation
 from kivy.core.audio import SoundLoader
+from audio_manager import AudioManager
 
 Window.size = (800, 450)
 
@@ -29,39 +30,32 @@ class GameScreen(Screen):
     combo_count = 0
     last_hit_time = 0
 
+    def __init__(self, **kwargs):
+        super().__init__(**kwargs)
+        self.audio = AudioManager()
+
     def on_enter(self):
         self.game_objects = []
         self.time_elapsed = 0
         self.score = 0
-        self.combo_count = 0
+        self.combo_count = 0          
         self.last_hit_time = 0
         self.temp_hp = 3
+        
         self.ids.combo_shadow.text = ""
         self.ids.combo_main.text = ""
         self.ids.combo_highlight.text = ""
+        self.ids.current_score_label.text = "Score: 0"
+        
         self.update_lives(self.temp_hp)
+        
+        self.audio.play_bgm() 
         Clock.schedule_interval(self.game_loop, 1.0/60.0)
         self.spawn_next_item(0)
         
-    def check_collision(self, touch):
-        current_time = time.time()
-        for item in self.game_objects[:]:
-            if item.collide_point(touch.x, touch.y): 
-                if not item.is_bomb:
-                    # --- โหลดและเล่นเสียงฟันเมื่อโดนไอเทม ---
-                    slash_sound = SoundLoader.load('assets/sounds/slash.wav')
-                    if slash_sound:
-                        slash_sound.play()
-                    
-                    # ... ส่วนคำนวณคะแนนและ Combo เดิมของคุณ ...
-                else:
-                    # --- เล่นเสียงระเบิดถ้าโดนระเบิด ---
-                    bomb_sound = SoundLoader.load('assets/sounds/explosion.wav')
-                    if bomb_sound:
-                        bomb_sound.play()
-                    self.test_damage()
 
     def on_leave(self):
+        self.audio.stop_bgm()
         Clock.unschedule(self.game_loop)
         Clock.unschedule(self.spawn_next_item)
         for obj in self.game_objects:
@@ -105,6 +99,7 @@ class GameScreen(Screen):
         for item in self.game_objects[:]:
             if item.collide_point(touch.x, touch.y): 
                 if item.is_bomb:
+                    self.audio.play_sizzle()
                     self.test_damage() 
                     self.combo_count = 0
                     self.ids.combo_shadow.text = ""
@@ -113,6 +108,7 @@ class GameScreen(Screen):
                     self.remove_widget(item)
                     self.game_objects.remove(item)
                 else:
+                    self.audio.play_slash()
                     if current_time - self.last_hit_time < 1.0:
                         self.combo_count += 1
                     else:
@@ -122,6 +118,8 @@ class GameScreen(Screen):
                     points = 10 * self.combo_count
                     self.score += points
                     print(f"Score: {self.score} (Combo x{self.combo_count})")
+                    
+                    self.ids.current_score_label.text = f"Score: {self.score}"
                     
                     if self.combo_count > 1:
                         self.show_combo_text(touch.x, touch.y)
@@ -273,6 +271,7 @@ class GameScreen(Screen):
         self.update_lives(self.temp_hp)
         
         if self.temp_hp <= 0:
+            self.audio.stop_bgm()
             print("Game Over")
             game_over_screen = self.manager.get_screen('gameover')
             if hasattr(game_over_screen.ids, 'score_label'):
