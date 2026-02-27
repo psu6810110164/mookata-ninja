@@ -10,9 +10,9 @@ class FallingItem(Image):
         
         self.is_bomb = is_bomb
         if self.is_bomb:
-            self.source = 'assets/images/heart_empty.png'
+            self.source = 'assets/bombb.png'
         else:
-            self.source = 'assets/images/heart_full.png'
+            self.source = choice(['assets/ood.png', 'assets/vegtb.png', 'assets/meat.png', 'assets/tomato.png' ])
             
         self.size_hint = (None, None)
         base_size = Window.height * 0.15

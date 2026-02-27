@@ -10,6 +10,7 @@ from kivy.graphics import Color, Mesh
 from kivy.clock import Clock
 from game_objects import FallingItem
 from kivy.animation import Animation
+from kivy.core.audio import SoundLoader
 from audio_manager import AudioManager
 
 Window.size = (800, 450)
