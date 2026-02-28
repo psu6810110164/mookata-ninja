@@ -6,14 +6,60 @@ from kivy.uix.screenmanager import ScreenManager, Screen
 from kivy.lang import Builder
 from kivy.core.window import Window
 import os
-from kivy.graphics import Color, Mesh, Ellipse
+from kivy.graphics import Color, Mesh, Ellipse, Rectangle, PushMatrix, PopMatrix, Rotate
 from kivy.clock import Clock
 from game_objects import FallingItem
 from kivy.animation import Animation
+from kivy.uix.image import Image
 
 Window.size = (800, 450)
 
 Builder.load_file('mookata.kv')
+
+class SlicedHalf(Image):
+    def __init__(self, orig_texture, is_left, orig_pos, orig_size, **kwargs):
+        super().__init__(**kwargs)
+        self.size_hint = (None, None)
+        self.size = (orig_size[0] / 2, orig_size[1])
+        self.allow_stretch = True
+        self.keep_ratio = False
+        
+        tw, th = orig_texture.width, orig_texture.height
+        
+        with self.canvas.before:
+            PushMatrix()
+            self.rot = Rotate(angle=0, origin=self.center)
+        with self.canvas.after:
+            PopMatrix()
+            
+        if is_left:
+            self.texture = orig_texture.get_region(0, 0, tw / 2, th)
+            self.pos = (orig_pos[0], orig_pos[1])
+            target_x = orig_pos[0] - 80 
+            target_rot = 90
+        else:
+            self.texture = orig_texture.get_region(tw / 2, 0, tw / 2, th)
+            self.pos = (orig_pos[0] + (orig_size[0] / 2), orig_pos[1])
+            target_x = orig_pos[0] + (orig_size[0] / 2) + 80
+            target_rot = -90
+            
+        target_y = orig_pos[1] - 300 
+        self.bind(pos=self.update_rot_origin)
+        
+        anim_pos = Animation(pos=(target_x, target_y), opacity=0, duration=0.5, t='out_quad')
+        anim_rot = Animation(angle=target_rot, duration=0.5, t='out_quad')
+        
+        anim_pos.bind(on_complete=self.remove_self)
+        
+        anim_pos.start(self)
+        anim_rot.start(self.rot)
+
+    def update_rot_origin(self, *args):
+        self.rot.origin = self.center
+
+    def remove_self(self, anim, widget):
+        if self.parent:
+            self.parent.remove_widget(self)
 
 class MainMenuScreen(Screen):
     pass
@@ -85,6 +131,7 @@ class GameScreen(Screen):
                     self.ids.combo_shadow.text = ""
                     self.ids.combo_main.text = ""
                     self.ids.combo_highlight.text = ""
+                    self.create_bomb_effect(touch.x, touch.y)
                     self.remove_widget(item)
                     self.game_objects.remove(item)
                 else:
@@ -93,9 +140,47 @@ class GameScreen(Screen):
                     self.last_hit_time = current_time
                     self.score += 10 * self.combo_count
                     if self.combo_count > 1: self.show_combo_text(touch.x, touch.y)
+                    self.create_slice_effect(item)
+                    self.create_hit_effect(touch.x, touch.y)
                     self.remove_widget(item)
                     self.game_objects.remove(item)
-                    self.create_hit_effect(touch.x, touch.y)
+
+    def create_slice_effect(self, item):
+        if not item.texture: return
+        left_half = SlicedHalf(item.texture, True, item.pos, item.size)
+        right_half = SlicedHalf(item.texture, False, item.pos, item.size)
+        self.add_widget(left_half)
+        self.add_widget(right_half)
+
+    def create_bomb_effect(self, x, y):
+        with self.canvas.after:
+            flash_color = Color(1, 0, 0, 0.6)
+            flash_rect = Rectangle(pos=(0, 0), size=Window.size)
+            wave1_color = Color(1, 0.4, 0, 0.9)
+            wave1 = Ellipse(pos=(x-20, y-20), size=(40, 40))
+            wave2_color = Color(1, 0.8, 0, 0.9)
+            wave2 = Ellipse(pos=(x-10, y-10), size=(20, 20))
+
+        anim_flash = Animation(a=0, duration=0.3)
+        anim_w1 = Animation(size=(500, 500), pos=(x-250, y-250), duration=0.4, t='out_quad')
+        anim_c1 = Animation(a=0, duration=0.4)
+        anim_w2 = Animation(size=(300, 300), pos=(x-150, y-150), duration=0.3, t='out_quad')
+        anim_c2 = Animation(a=0, duration=0.3)
+
+        def remove_effect(anim, widget):
+            self.canvas.after.remove(flash_color)
+            self.canvas.after.remove(flash_rect)
+            self.canvas.after.remove(wave1_color)
+            self.canvas.after.remove(wave1)
+            self.canvas.after.remove(wave2_color)
+            self.canvas.after.remove(wave2)
+
+        anim_w1.bind(on_complete=remove_effect)
+        anim_flash.start(flash_color)
+        anim_w1.start(wave1)
+        anim_c1.start(wave1_color)
+        anim_w2.start(wave2)
+        anim_c2.start(wave2_color)
 
     def create_hit_effect(self, x, y):
         with self.canvas.after:
