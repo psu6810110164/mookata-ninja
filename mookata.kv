@@ -12,7 +12,7 @@
     FloatLayout:
         # ส่วนพื้นหลังที่ขยายเต็มเฟรม
         Image:
-            source: 'assets/bg_main1.png'
+            source: 'assets/images/bg_main1.png'
             size_hint: 1, 1              # ขยายขนาดให้เท่ากับหน้าต่างหลัก
             pos_hint: {'center_x': 0.5, 'center_y': 0.5}
             allow_stretch: True          # อนุญาตให้ยืดภาพ
@@ -28,21 +28,21 @@
                 text: "START GAME"
                 font_size: '22sp'
                 bold: True
-                background_normal: 'assets/button_wood1.png'
+                background_normal: 'assets/images/button_wood1.png'
                 on_release: app.root.current = "game"
                 
             Button:
                 text: "SETTINGS"
                 font_size: '22sp'
                 bold: True
-                background_normal: 'assets/button_wood1.png'
+                background_normal: 'assets/images/button_wood1.png'
                 on_release: app.root.current = "settings"
                 
             Button:
                 text: "EXIT"
                 font_size: '22sp'
                 bold: True
-                background_normal: 'assets/button_wood1.png'
+                background_normal: 'assets/images/button_wood1.png'
                 background_color: 1, 0.3, 0.3, 1
                 on_release: app.stop()
 
@@ -50,7 +50,7 @@
     FloatLayout:
         # 1. พื้นหลัง (ใช้รูปเดียวกับหน้าเมนูเพื่อให้คุมธีม)
         Image:
-            source: 'assets/bg_main1.png'
+            source: 'assets/images/bg_main1.png'
             allow_stretch: True
             keep_ratio: False
             color: 0.6, 0.6, 0.6, 1  # ปรับให้มืดลงเล็กน้อยเพื่อให้ UI เด่นขึ้น
@@ -107,7 +107,7 @@
             bold: True
             size_hint: 0.2, 0.12
             pos_hint: {"center_x": 0.5, "center_y": 0.15}
-            background_normal: 'assets/button_wood1.png'
+            background_normal: 'assets/images/button_wood1.png'
             background_color: 1, 1, 1, 1
             on_release: app.root.current = "menu"
 
@@ -115,7 +115,7 @@
     FloatLayout:
         # พื้นหลังขณะเล่น (อาจใช้ภาพเดียวกับหน้าเมนูหรือภาพเรียบๆ)
         Image:
-            source: 'assets/bg_game.png'
+            source: 'assets/images/bg_game.png'
             allow_stretch: True
             keep_ratio: False
 
@@ -201,7 +201,7 @@
     FloatLayout:
         # 1. พื้นหลังมืดลงเพื่อความดราม่า (Overlay)
         Image:
-            source: 'assets/gameover.jpg'
+            source: 'assets/images/gameover.jpg'
             allow_stretch: True
             keep_ratio: False
             color: 0.3, 0.3, 0.3, 1  # ปรับสีให้มืดลงมากกกว่าหน้า Setting
@@ -296,7 +296,7 @@
                 text: "SAVE & RESTART"
                 font_size: '18sp'
                 bold: True
-                background_normal: 'assets/button_wood1.png'
+                background_normal: 'assets/images/button_wood1.png'
                 on_release: 
                     root.save_score()
                     root.restart_game()
@@ -305,5 +305,5 @@
                 text: "MAIN MENU"
                 font_size: '18sp'
                 bold: True
-                background_normal: 'assets/button_wood1.png'
+                background_normal: 'assets/images/button_wood1.png'
                 on_release: app.root.current = "menu"
