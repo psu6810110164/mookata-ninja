@@ -122,6 +122,7 @@ class GameScreen(Screen):
         margin = 80
         safe_x = max(margin, min(item_x, Window.width - margin))
         safe_y = max(margin, min(item_y + 80, Window.height - margin))
+        self.ids.combo_main.color = (1, 0.8, 0, 1)
         for lbl_id in ['combo_shadow', 'combo_main', 'combo_highlight']:
             lbl = self.ids[lbl_id]
             lbl.text = txt
