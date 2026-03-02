@@ -12,12 +12,17 @@ from game_objects import FallingItem
 from kivy.animation import Animation
 from kivy.uix.image import Image
 
+try:
+    from audio_manager import AudioManager
+except ImportError:
+    pass
+
 Window.size = (800, 450)
 
 Builder.load_file('mookata.kv')
 
 class SlicedHalf(Image):
-    def __init__(self, orig_texture, is_left, orig_pos, orig_size, **kwargs):
+    def __init__(self, orig_texture, is_left, orig_center, orig_size, slash_angle, **kwargs):
         super().__init__(**kwargs)
         self.size_hint = (None, None)
         self.size = (orig_size[0] / 2, orig_size[1])
@@ -25,32 +30,46 @@ class SlicedHalf(Image):
         self.keep_ratio = False
         
         tw, th = orig_texture.width, orig_texture.height
+        if is_left:
+            self.texture = orig_texture.get_region(0, 0, tw / 2, th)
+        else:
+            self.texture = orig_texture.get_region(tw / 2, 0, tw / 2, th)
+            
+        alpha = slash_angle - 90
+        rad = math.radians(alpha)
+        w, h = orig_size
+        dir_sign = -1 if is_left else 1
+        
+        local_x = dir_sign * w / 4
+        start_cx = orig_center[0] + local_x * math.cos(rad)
+        start_cy = orig_center[1] + local_x * math.sin(rad)
+        self.pos = (start_cx - self.size[0] / 2, start_cy - self.size[1] / 2)
         
         with self.canvas.before:
             PushMatrix()
-            self.rot = Rotate(angle=0, origin=self.center)
+            self.rot = Rotate(angle=alpha, origin=self.center)
         with self.canvas.after:
             PopMatrix()
             
-        if is_left:
-            self.texture = orig_texture.get_region(0, 0, tw / 2, th)
-            self.pos = (orig_pos[0], orig_pos[1])
-            target_x = orig_pos[0] - 80 
-            target_rot = 90
-        else:
-            self.texture = orig_texture.get_region(tw / 2, 0, tw / 2, th)
-            self.pos = (orig_pos[0] + (orig_size[0] / 2), orig_pos[1])
-            target_x = orig_pos[0] + (orig_size[0] / 2) + 80
-            target_rot = -90
-            
-        target_y = orig_pos[1] - 300 
         self.bind(pos=self.update_rot_origin)
         
-        anim_pos = Animation(pos=(target_x, target_y), opacity=0, duration=0.5, t='out_quad')
-        anim_rot = Animation(angle=target_rot, duration=0.5, t='out_quad')
+        peak_local_x = local_x + (dir_sign * 30)
+        peak_cx = orig_center[0] + peak_local_x * math.cos(rad)
+        peak_cy = orig_center[1] + peak_local_x * math.sin(rad) + 50
+        peak_pos = (peak_cx - self.size[0] / 2, peak_cy - self.size[1] / 2)
+        
+        target_local_x = local_x + (dir_sign * 100)
+        target_cx = orig_center[0] + target_local_x * math.cos(rad)
+        target_cy = orig_center[1] + target_local_x * math.sin(rad) - 400
+        target_pos = (target_cx - self.size[0] / 2, target_cy - self.size[1] / 2)
+        
+        target_rot = alpha + (dir_sign * 120)
+        
+        anim_pos = Animation(pos=peak_pos, duration=0.3, t='out_quad') + \
+                   Animation(pos=target_pos, opacity=0, duration=1.2, t='in_quad')
+        anim_rot = Animation(angle=target_rot, duration=1.5, t='linear')
         
         anim_pos.bind(on_complete=self.remove_self)
-        
         anim_pos.start(self)
         anim_rot.start(self.rot)
 
@@ -74,10 +93,19 @@ class GameScreen(Screen):
     combo_count = 0
     last_hit_time = 0
 
+    def __init__(self, **kwargs):
+        super().__init__(**kwargs)
+        try:
+            self.audio = AudioManager()
+        except Exception:
+            pass
+
     def on_enter(self):
         self.game_objects = []
         self.time_elapsed = 0
         self.score = 0
+        if 'current_score_label' in self.ids:
+            self.ids.current_score_label.text = f"Score: {self.score}"
         self.combo_count = 0
         self.last_hit_time = 0
         self.temp_hp = 3
@@ -121,10 +149,24 @@ class GameScreen(Screen):
 
     def check_collision(self, touch):
         current_time = time.time()
+        
+        trail = touch.ud.get('trail', [])
+        if len(trail) >= 2:
+            dx = trail[-1][0] - trail[0][0]
+            dy = trail[-1][1] - trail[0][1]
+        else:
+            dx = touch.dx
+            dy = touch.dy
+            
+        if dx == 0 and dy == 0:
+            slash_angle = 90
+        else:
+            slash_angle = math.degrees(math.atan2(dy, dx))
+
         for item in self.game_objects[:]:
             if item.collide_point(touch.x, touch.y): 
                 if item.is_bomb:
-                    if hasattr(self, 'audio'):
+                    if hasattr(self, 'audio') and hasattr(self.audio, 'play_bomb'):
                         self.audio.play_bomb()
                     self.test_damage() 
                     self.combo_count = 0
@@ -135,22 +177,27 @@ class GameScreen(Screen):
                     self.remove_widget(item)
                     self.game_objects.remove(item)
                 else:
+                    if hasattr(self, 'audio') and hasattr(self.audio, 'play_hit'):
+                        self.audio.play_hit()
                     if current_time - self.last_hit_time < 1.0: self.combo_count += 1
                     else: self.combo_count = 1
                     self.last_hit_time = current_time
                     self.score += 10 * self.combo_count
+                    if 'current_score_label' in self.ids:
+                        self.ids.current_score_label.text = f"Score: {self.score}"
                     if self.combo_count > 1: self.show_combo_text(touch.x, touch.y)
-                    self.create_slice_effect(item)
+                    self.create_slice_effect(item, slash_angle)
                     self.create_hit_effect(touch.x, touch.y)
                     self.remove_widget(item)
                     self.game_objects.remove(item)
 
-    def create_slice_effect(self, item):
+    def create_slice_effect(self, item, slash_angle):
         if not item.texture: return
-        left_half = SlicedHalf(item.texture, True, item.pos, item.size)
-        right_half = SlicedHalf(item.texture, False, item.pos, item.size)
-        self.add_widget(left_half)
-        self.add_widget(right_half)
+        orig_center = item.center
+        half_1 = SlicedHalf(item.texture, True, orig_center, item.size, slash_angle)
+        half_2 = SlicedHalf(item.texture, False, orig_center, item.size, slash_angle)
+        self.add_widget(half_1)
+        self.add_widget(half_2)
 
     def create_bomb_effect(self, x, y):
         with self.canvas.after:
@@ -200,25 +247,39 @@ class GameScreen(Screen):
 
     def show_combo_text(self, item_x, item_y):
         txt = f"{self.combo_count}x\nCOMBO!"
-        scale_factor = Window.height / 450.0
-        normal_size = 45 * scale_factor
-        pop_size = 65 * scale_factor
-        margin = 80
+
+        margin = 100
         safe_x = max(margin, min(item_x, Window.width - margin))
         safe_y = max(margin, min(item_y + 80, Window.height - margin))
-        for lbl_id in ['combo_shadow', 'combo_main', 'combo_highlight']:
-            lbl = self.ids[lbl_id]
-            lbl.text = txt
-            lbl.font_size = normal_size
-            lbl.center_x = safe_x
-            lbl.center_y = safe_y
-            if lbl_id == 'combo_shadow': lbl.center_y -= 2
-            if lbl_id == 'combo_highlight': lbl.center_y += 2
+
+        normal_size = 60
+        pop_size = 90
+
+        self.ids.combo_shadow.text = txt
+        self.ids.combo_shadow.center_x = safe_x
+        self.ids.combo_shadow.center_y = safe_y - 2
+        self.ids.combo_shadow.color = (0, 0, 0.5, 1)
+        self.ids.combo_shadow.font_size = normal_size # เริ่มที่ขนาดปกติ
+
+        self.ids.combo_main.text = txt
+        self.ids.combo_main.center_x = safe_x
+        self.ids.combo_main.center_y = safe_y
+        self.ids.combo_main.color = (0, 0.6, 1, 1)
+        self.ids.combo_main.font_size = normal_size
+
+        self.ids.combo_highlight.text = txt
+        self.ids.combo_highlight.center_x = safe_x
+        self.ids.combo_highlight.center_y = safe_y + 2
+        self.ids.combo_highlight.color = (0.8, 1, 1, 1)
+        self.ids.combo_highlight.font_size = normal_size
+
         anim = Animation(font_size=pop_size, duration=0.1, t='out_back') + \
                Animation(font_size=normal_size, duration=0.1)
+
         anim.start(self.ids.combo_shadow)
         anim.start(self.ids.combo_main)
         anim.start(self.ids.combo_highlight)
+
         Clock.unschedule(self.hide_combo_text)
         Clock.schedule_once(self.hide_combo_text, 1.5)
 
@@ -228,7 +289,10 @@ class GameScreen(Screen):
             lbl.text = ""
             lbl.color = (0, 0, 0, 0)
 
+
     def on_touch_down(self, touch):
+        if hasattr(self, 'audio') and hasattr(self.audio, 'play_slash'):
+            self.audio.play_slash()
         touch.ud['trail'] = [(touch.x, touch.y)]
         self.check_collision(touch)
         with self.canvas:
