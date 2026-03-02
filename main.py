@@ -57,7 +57,7 @@ class GameScreen(Screen):
         if difficulty_level > 5: spawn_count = randint(3, 6)
         for _ in range(spawn_count):
             is_bomb = False
-            if difficulty_level > 0.5 and random() < 0.3: is_bomb = True
+            if difficulty_level > 0.5 and random() < 0.15: is_bomb = True
             item = FallingItem(difficulty=difficulty_level, is_bomb=is_bomb)
             self.add_widget(item)
             self.game_objects.append(item)
