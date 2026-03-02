@@ -205,15 +205,15 @@ class GameScreen(Screen):
             flash_color = Color(1, 0, 0, 0.6)
             flash_rect = Rectangle(pos=(0, 0), size=Window.size)
             wave1_color = Color(1, 0.4, 0, 0.9)
-            wave1 = Ellipse(pos=(x-20, y-20), size=(40, 40))
+            wave1 = Ellipse(pos=(x-50, y-50), size=(200, 200))
             wave2_color = Color(1, 0.8, 0, 0.9)
-            wave2 = Ellipse(pos=(x-10, y-10), size=(20, 20))
+            wave2 = Ellipse(pos=(x-35, y-35), size=(70, 70))
 
         anim_flash = Animation(a=0, duration=0.3)
-        anim_w1 = Animation(size=(500, 500), pos=(x-250, y-250), duration=0.4, t='out_quad')
-        anim_c1 = Animation(a=0, duration=0.4)
-        anim_w2 = Animation(size=(300, 300), pos=(x-150, y-150), duration=0.3, t='out_quad')
-        anim_c2 = Animation(a=0, duration=0.3)
+        anim_w1 = Animation(size=(800, 800), pos=(x-400, y-400), duration=0.5, t='out_quad')
+        anim_c1 = Animation(a=0, duration=0.5)
+        anim_w2 = Animation(size=(500, 500), pos=(x-250, y-250), duration=0.4, t='out_quad')
+        anim_c2 = Animation(a=0, duration=0.4)
 
         def remove_effect(anim, widget):
             self.canvas.after.remove(flash_color)
@@ -260,7 +260,7 @@ class GameScreen(Screen):
         self.ids.combo_shadow.center_x = safe_x
         self.ids.combo_shadow.center_y = safe_y - 2
         self.ids.combo_shadow.color = (0, 0, 0.5, 1)
-        self.ids.combo_shadow.font_size = normal_size # เริ่มที่ขนาดปกติ
+        self.ids.combo_shadow.font_size = normal_size
 
         self.ids.combo_main.text = txt
         self.ids.combo_main.center_x = safe_x
