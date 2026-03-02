@@ -10,9 +10,8 @@ from kivy.graphics import Color, Mesh, Ellipse, Rectangle, PushMatrix, PopMatrix
 from kivy.clock import Clock
 from game_objects import FallingItem
 from kivy.animation import Animation
-
-from audio_manager import AudioManager
 from kivy.uix.image import Image
+from audio_manager import AudioManager
 try:
     from audio_manager import AudioManager
 except ImportError:
@@ -67,7 +66,7 @@ class SlicedHalf(Image):
         target_rot = alpha + (dir_sign * 120)
         
         anim_pos = Animation(pos=peak_pos, duration=0.3, t='out_quad') + \
-                   Animation(pos=target_pos, opacity=0, duration=1.2, t='in_quad')
+                    Animation(pos=target_pos, opacity=0, duration=1.2, t='in_quad')
         anim_rot = Animation(angle=target_rot, duration=1.5, t='linear')
         
         anim_pos.bind(on_complete=self.remove_self)
@@ -265,7 +264,7 @@ class GameScreen(Screen):
             if lbl_id == 'combo_shadow': lbl.center_y -= 2
             if lbl_id == 'combo_highlight': lbl.center_y += 2
         anim = Animation(font_size=pop_size, duration=0.1, t='out_back') + \
-               Animation(font_size=normal_size, duration=0.1)
+                Animation(font_size=normal_size, duration=0.1)
         anim.start(self.ids.combo_shadow)
         anim.start(self.ids.combo_main)
         anim.start(self.ids.combo_highlight)
