@@ -10,8 +10,9 @@ from kivy.graphics import Color, Mesh, Ellipse, Rectangle, PushMatrix, PopMatrix
 from kivy.clock import Clock
 from game_objects import FallingItem
 from kivy.animation import Animation
-from kivy.uix.image import Image
 
+from audio_manager import AudioManager
+from kivy.uix.image import Image
 try:
     from audio_manager import AudioManager
 except ImportError:
@@ -95,10 +96,7 @@ class GameScreen(Screen):
 
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
-        try:
-            self.audio = AudioManager()
-        except Exception:
-            pass
+        self.audio = AudioManager()
 
     def on_enter(self):
         self.game_objects = []
@@ -113,10 +111,14 @@ class GameScreen(Screen):
         self.ids.combo_main.text = ""
         self.ids.combo_highlight.text = ""
         self.update_lives(self.temp_hp)
+        if hasattr(self, 'audio') and hasattr(self.audio, 'play_bgm'):
+            self.audio.play_bgm()
         Clock.schedule_interval(self.game_loop, 1.0/60.0)
         self.spawn_next_item(0)
 
     def on_leave(self):
+        if hasattr(self, 'audio') and hasattr(self.audio, 'stop_bgm'):
+            self.audio.stop_bgm()
         Clock.unschedule(self.game_loop)
         Clock.unschedule(self.spawn_next_item)
         for obj in self.game_objects:
@@ -131,7 +133,7 @@ class GameScreen(Screen):
         if difficulty_level > 5: spawn_count = randint(3, 6)
         for _ in range(spawn_count):
             is_bomb = False
-            if difficulty_level > 0.5 and random() < 0.3: is_bomb = True
+            if difficulty_level > 0.5 and random() < 0.15: is_bomb = True
             item = FallingItem(difficulty=difficulty_level, is_bomb=is_bomb)
             self.add_widget(item)
             self.game_objects.append(item)
@@ -177,8 +179,8 @@ class GameScreen(Screen):
                     self.remove_widget(item)
                     self.game_objects.remove(item)
                 else:
-                    if hasattr(self, 'audio') and hasattr(self.audio, 'play_hit'):
-                        self.audio.play_hit()
+                    if hasattr(self, 'audio') and hasattr(self.audio, 'play_slash'):
+                        self.audio.play_slash()
                     if current_time - self.last_hit_time < 1.0: self.combo_count += 1
                     else: self.combo_count = 1
                     self.last_hit_time = current_time
@@ -248,39 +250,25 @@ class GameScreen(Screen):
 
     def show_combo_text(self, item_x, item_y):
         txt = f"{self.combo_count}x\nCOMBO!"
-
         margin = 100
         safe_x = max(margin, min(item_x, Window.width - margin))
         safe_y = max(margin, min(item_y + 80, Window.height - margin))
-
         normal_size = 60
         pop_size = 90
-
-        self.ids.combo_shadow.text = txt
-        self.ids.combo_shadow.center_x = safe_x
-        self.ids.combo_shadow.center_y = safe_y - 2
-        self.ids.combo_shadow.color = (0, 0, 0.5, 1)
-        self.ids.combo_shadow.font_size = normal_size
-
-        self.ids.combo_main.text = txt
-        self.ids.combo_main.center_x = safe_x
-        self.ids.combo_main.center_y = safe_y
-        self.ids.combo_main.color = (0, 0.6, 1, 1)
-        self.ids.combo_main.font_size = normal_size
-
-        self.ids.combo_highlight.text = txt
-        self.ids.combo_highlight.center_x = safe_x
-        self.ids.combo_highlight.center_y = safe_y + 2
-        self.ids.combo_highlight.color = (0.8, 1, 1, 1)
-        self.ids.combo_highlight.font_size = normal_size
-
+        self.ids.combo_main.color = (1, 0.8, 0, 1)
+        for lbl_id in ['combo_shadow', 'combo_main', 'combo_highlight']:
+            lbl = self.ids[lbl_id]
+            lbl.text = txt
+            lbl.font_size = normal_size
+            lbl.center_x = safe_x
+            lbl.center_y = safe_y
+            if lbl_id == 'combo_shadow': lbl.center_y -= 2
+            if lbl_id == 'combo_highlight': lbl.center_y += 2
         anim = Animation(font_size=pop_size, duration=0.1, t='out_back') + \
                Animation(font_size=normal_size, duration=0.1)
-
         anim.start(self.ids.combo_shadow)
         anim.start(self.ids.combo_main)
         anim.start(self.ids.combo_highlight)
-
         Clock.unschedule(self.hide_combo_text)
         Clock.schedule_once(self.hide_combo_text, 1.5)
 
