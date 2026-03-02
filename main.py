@@ -10,6 +10,7 @@ from kivy.graphics import Color, Mesh, Ellipse
 from kivy.clock import Clock
 from game_objects import FallingItem
 from kivy.animation import Animation
+from audio_manager import AudioManager
 
 Window.size = (800, 450)
 
@@ -28,6 +29,10 @@ class GameScreen(Screen):
     combo_count = 0
     last_hit_time = 0
 
+    def __init__(self, **kwargs):
+        super().__init__(**kwargs)
+        self.audio = AudioManager()
+
     def on_enter(self):
         self.game_objects = []
         self.time_elapsed = 0
@@ -39,10 +44,14 @@ class GameScreen(Screen):
         self.ids.combo_main.text = ""
         self.ids.combo_highlight.text = ""
         self.update_lives(self.temp_hp)
+        if hasattr(self, 'audio') and hasattr(self.audio, 'play_bgm'):
+            self.audio.play_bgm()
         Clock.schedule_interval(self.game_loop, 1.0/60.0)
         self.spawn_next_item(0)
 
     def on_leave(self):
+        if hasattr(self, 'audio') and hasattr(self.audio, 'stop_bgm'):
+            self.audio.stop_bgm()
         Clock.unschedule(self.game_loop)
         Clock.unschedule(self.spawn_next_item)
         for obj in self.game_objects:
@@ -88,6 +97,8 @@ class GameScreen(Screen):
                     self.remove_widget(item)
                     self.game_objects.remove(item)
                 else:
+                    if hasattr(self, 'audio') and hasattr(self.audio, 'play_slash'):
+                        self.audio.play_slash()
                     if current_time - self.last_hit_time < 1.0: self.combo_count += 1
                     else: self.combo_count = 1
                     self.last_hit_time = current_time
