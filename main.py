@@ -92,6 +92,7 @@ class GameScreen(Screen):
                     else: self.combo_count = 1
                     self.last_hit_time = current_time
                     self.score += 10 * self.combo_count
+                    self.ids.current_score_label.text = f"Score: {self.score}"
                     if self.combo_count > 1: self.show_combo_text(touch.x, touch.y)
                     self.remove_widget(item)
                     self.game_objects.remove(item)
