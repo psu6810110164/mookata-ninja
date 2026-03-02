@@ -6,15 +6,80 @@ from kivy.uix.screenmanager import ScreenManager, Screen
 from kivy.lang import Builder
 from kivy.core.window import Window
 import os
-from kivy.graphics import Color, Mesh, Ellipse
+from kivy.graphics import Color, Mesh, Ellipse, Rectangle, PushMatrix, PopMatrix, Rotate
 from kivy.clock import Clock
 from game_objects import FallingItem
 from kivy.animation import Animation
+
 from audio_manager import AudioManager
+from kivy.uix.image import Image
+try:
+    from audio_manager import AudioManager
+except ImportError:
+    pass
 
 Window.size = (800, 450)
 
 Builder.load_file('mookata.kv')
+
+class SlicedHalf(Image):
+    def __init__(self, orig_texture, is_left, orig_center, orig_size, slash_angle, **kwargs):
+        super().__init__(**kwargs)
+        self.size_hint = (None, None)
+        self.size = (orig_size[0] / 2, orig_size[1])
+        self.allow_stretch = True
+        self.keep_ratio = False
+        
+        tw, th = orig_texture.width, orig_texture.height
+        if is_left:
+            self.texture = orig_texture.get_region(0, 0, tw / 2, th)
+        else:
+            self.texture = orig_texture.get_region(tw / 2, 0, tw / 2, th)
+            
+        alpha = slash_angle - 90
+        rad = math.radians(alpha)
+        w, h = orig_size
+        dir_sign = -1 if is_left else 1
+        
+        local_x = dir_sign * w / 4
+        start_cx = orig_center[0] + local_x * math.cos(rad)
+        start_cy = orig_center[1] + local_x * math.sin(rad)
+        self.pos = (start_cx - self.size[0] / 2, start_cy - self.size[1] / 2)
+        
+        with self.canvas.before:
+            PushMatrix()
+            self.rot = Rotate(angle=alpha, origin=self.center)
+        with self.canvas.after:
+            PopMatrix()
+            
+        self.bind(pos=self.update_rot_origin)
+        
+        peak_local_x = local_x + (dir_sign * 30)
+        peak_cx = orig_center[0] + peak_local_x * math.cos(rad)
+        peak_cy = orig_center[1] + peak_local_x * math.sin(rad) + 50
+        peak_pos = (peak_cx - self.size[0] / 2, peak_cy - self.size[1] / 2)
+        
+        target_local_x = local_x + (dir_sign * 100)
+        target_cx = orig_center[0] + target_local_x * math.cos(rad)
+        target_cy = orig_center[1] + target_local_x * math.sin(rad) - 400
+        target_pos = (target_cx - self.size[0] / 2, target_cy - self.size[1] / 2)
+        
+        target_rot = alpha + (dir_sign * 120)
+        
+        anim_pos = Animation(pos=peak_pos, duration=0.3, t='out_quad') + \
+                   Animation(pos=target_pos, opacity=0, duration=1.2, t='in_quad')
+        anim_rot = Animation(angle=target_rot, duration=1.5, t='linear')
+        
+        anim_pos.bind(on_complete=self.remove_self)
+        anim_pos.start(self)
+        anim_rot.start(self.rot)
+
+    def update_rot_origin(self, *args):
+        self.rot.origin = self.center
+
+    def remove_self(self, anim, widget):
+        if self.parent:
+            self.parent.remove_widget(self)
 
 class MainMenuScreen(Screen):
     pass
@@ -37,6 +102,8 @@ class GameScreen(Screen):
         self.game_objects = []
         self.time_elapsed = 0
         self.score = 0
+        if 'current_score_label' in self.ids:
+            self.ids.current_score_label.text = f"Score: {self.score}"
         self.combo_count = 0
         self.last_hit_time = 0
         self.temp_hp = 3
@@ -84,16 +151,31 @@ class GameScreen(Screen):
 
     def check_collision(self, touch):
         current_time = time.time()
+        
+        trail = touch.ud.get('trail', [])
+        if len(trail) >= 2:
+            dx = trail[-1][0] - trail[0][0]
+            dy = trail[-1][1] - trail[0][1]
+        else:
+            dx = touch.dx
+            dy = touch.dy
+            
+        if dx == 0 and dy == 0:
+            slash_angle = 90
+        else:
+            slash_angle = math.degrees(math.atan2(dy, dx))
+
         for item in self.game_objects[:]:
             if item.collide_point(touch.x, touch.y): 
                 if item.is_bomb:
-                    if hasattr(self, 'audio'):
+                    if hasattr(self, 'audio') and hasattr(self.audio, 'play_bomb'):
                         self.audio.play_bomb()
                     self.test_damage() 
                     self.combo_count = 0
                     self.ids.combo_shadow.text = ""
                     self.ids.combo_main.text = ""
                     self.ids.combo_highlight.text = ""
+                    self.create_bomb_effect(touch.x, touch.y)
                     self.remove_widget(item)
                     self.game_objects.remove(item)
                 else:
@@ -103,11 +185,52 @@ class GameScreen(Screen):
                     else: self.combo_count = 1
                     self.last_hit_time = current_time
                     self.score += 10 * self.combo_count
+
                     self.ids.current_score_label.text = f"Score: {self.score}"
+
                     if self.combo_count > 1: self.show_combo_text(touch.x, touch.y)
+                    self.create_slice_effect(item, slash_angle)
+                    self.create_hit_effect(touch.x, touch.y)
                     self.remove_widget(item)
                     self.game_objects.remove(item)
-                    self.create_hit_effect(touch.x, touch.y)
+
+    def create_slice_effect(self, item, slash_angle):
+        if not item.texture: return
+        orig_center = item.center
+        half_1 = SlicedHalf(item.texture, True, orig_center, item.size, slash_angle)
+        half_2 = SlicedHalf(item.texture, False, orig_center, item.size, slash_angle)
+        self.add_widget(half_1)
+        self.add_widget(half_2)
+
+    def create_bomb_effect(self, x, y):
+        with self.canvas.after:
+            flash_color = Color(1, 0, 0, 0.6)
+            flash_rect = Rectangle(pos=(0, 0), size=Window.size)
+            wave1_color = Color(1, 0.4, 0, 0.9)
+            wave1 = Ellipse(pos=(x-50, y-50), size=(200, 200))
+            wave2_color = Color(1, 0.8, 0, 0.9)
+            wave2 = Ellipse(pos=(x-35, y-35), size=(70, 70))
+
+        anim_flash = Animation(a=0, duration=0.3)
+        anim_w1 = Animation(size=(800, 800), pos=(x-400, y-400), duration=0.5, t='out_quad')
+        anim_c1 = Animation(a=0, duration=0.5)
+        anim_w2 = Animation(size=(500, 500), pos=(x-250, y-250), duration=0.4, t='out_quad')
+        anim_c2 = Animation(a=0, duration=0.4)
+
+        def remove_effect(anim, widget):
+            self.canvas.after.remove(flash_color)
+            self.canvas.after.remove(flash_rect)
+            self.canvas.after.remove(wave1_color)
+            self.canvas.after.remove(wave1)
+            self.canvas.after.remove(wave2_color)
+            self.canvas.after.remove(wave2)
+
+        anim_w1.bind(on_complete=remove_effect)
+        anim_flash.start(flash_color)
+        anim_w1.start(wave1)
+        anim_c1.start(wave1_color)
+        anim_w2.start(wave2)
+        anim_c2.start(wave2_color)
 
     def create_hit_effect(self, x, y):
         with self.canvas.after:
@@ -127,12 +250,11 @@ class GameScreen(Screen):
 
     def show_combo_text(self, item_x, item_y):
         txt = f"{self.combo_count}x\nCOMBO!"
-        scale_factor = Window.height / 450.0
-        normal_size = 45 * scale_factor
-        pop_size = 65 * scale_factor
-        margin = 80
+        margin = 100
         safe_x = max(margin, min(item_x, Window.width - margin))
         safe_y = max(margin, min(item_y + 80, Window.height - margin))
+        normal_size = 60
+        pop_size = 90
         self.ids.combo_main.color = (1, 0.8, 0, 1)
         for lbl_id in ['combo_shadow', 'combo_main', 'combo_highlight']:
             lbl = self.ids[lbl_id]
@@ -156,7 +278,10 @@ class GameScreen(Screen):
             lbl.text = ""
             lbl.color = (0, 0, 0, 0)
 
+
     def on_touch_down(self, touch):
+        if hasattr(self, 'audio') and hasattr(self.audio, 'play_slash'):
+            self.audio.play_slash()
         touch.ud['trail'] = [(touch.x, touch.y)]
         self.check_collision(touch)
         with self.canvas:
