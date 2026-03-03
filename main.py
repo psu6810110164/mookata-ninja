@@ -12,8 +12,6 @@ from game_objects import FallingItem
 from kivy.animation import Animation
 from kivy.uix.image import Image
 
-import random as rnd
-
 try:
     from audio_manager import AudioManager
 except ImportError:
@@ -94,6 +92,7 @@ class GameScreen(Screen):
     score = 0
     combo_count = 0
     last_hit_time = 0
+    is_paused = False
 
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
@@ -103,6 +102,7 @@ class GameScreen(Screen):
         self.game_objects = []
         self.time_elapsed = 0
         self.score = 0
+        self.is_paused = False
         if 'current_score_label' in self.ids:
             self.ids.current_score_label.text = f"Score: {self.score}"
         self.combo_count = 0
@@ -112,6 +112,11 @@ class GameScreen(Screen):
         self.ids.combo_main.text = ""
         self.ids.combo_highlight.text = ""
         self.update_lives(self.temp_hp)
+        
+        if 'pause_overlay' in self.ids:
+            self.ids.pause_overlay.opacity = 0
+            self.ids.pause_overlay.disabled = True
+            
         if hasattr(self, 'audio') and hasattr(self.audio, 'play_bgm'):
             self.audio.play_bgm()
         Clock.schedule_interval(self.game_loop, 1.0/60.0)
@@ -126,7 +131,31 @@ class GameScreen(Screen):
             self.remove_widget(obj)
         self.game_objects.clear()
 
+    def pause_game(self):
+        self.is_paused = True
+        if 'pause_overlay' in self.ids:
+            self.ids.pause_overlay.opacity = 1
+            self.ids.pause_overlay.disabled = False
+
+    def resume_game(self):
+        self.is_paused = False
+        if 'pause_overlay' in self.ids:
+            self.ids.pause_overlay.opacity = 0
+            self.ids.pause_overlay.disabled = True
+
+    def quit_game(self):
+        self.resume_game()
+        game_over_screen = self.manager.get_screen('gameover')
+        if hasattr(game_over_screen.ids, 'score_label'): 
+            game_over_screen.ids.score_label.text = f"Your Score: {self.score}"
+        game_over_screen.final_score = self.score 
+        self.manager.current = "gameover"
+
     def spawn_next_item(self, dt):
+        if self.is_paused:
+            Clock.schedule_once(self.spawn_next_item, 0.1)
+            return
+            
         difficulty_level = self.time_elapsed / 10.0
         spawn_count = 1
         if difficulty_level > 1: spawn_count = randint(1, 2)
@@ -143,6 +172,9 @@ class GameScreen(Screen):
         Clock.schedule_once(self.spawn_next_item, next_spawn_delay)
 
     def game_loop(self, dt):
+        if self.is_paused:
+            return
+            
         self.time_elapsed += dt
         for item in self.game_objects[:]:
             item.update()
@@ -177,7 +209,6 @@ class GameScreen(Screen):
                     self.ids.combo_main.text = ""
                     self.ids.combo_highlight.text = ""
                     self.create_bomb_effect(touch.x, touch.y)
-                    self.trigger_screenshake()
                     self.remove_widget(item)
                     self.game_objects.remove(item)
                 else:
@@ -195,17 +226,6 @@ class GameScreen(Screen):
                     self.create_hit_effect(touch.x, touch.y)
                     self.remove_widget(item)
                     self.game_objects.remove(item)
-
-    def trigger_screenshake(self):
-        magnitude = 10
-        duration = 0.04
-        
-        anim = Animation(x=rnd.uniform(-magnitude, magnitude), y=rnd.uniform(-magnitude, magnitude), duration=duration, t='linear') #
-        anim += Animation(x=rnd.uniform(-magnitude, magnitude), y=rnd.uniform(-magnitude, magnitude), duration=duration, t='linear') #
-        anim += Animation(x=rnd.uniform(-magnitude, magnitude), y=rnd.uniform(-magnitude, magnitude), duration=duration, t='linear') #
-        anim += Animation(x=0, y=0, duration=duration, t='out_quad') #
-        
-        anim.start(self)
 
     def create_slice_effect(self, item, slash_angle):
         if not item.texture: return
@@ -303,6 +323,9 @@ class GameScreen(Screen):
 
 
     def on_touch_down(self, touch):
+        if self.is_paused:
+            return super().on_touch_down(touch)
+            
         if hasattr(self, 'audio') and hasattr(self.audio, 'play_slash'):
             self.audio.play_slash()
         touch.ud['trail'] = [(touch.x, touch.y)]
@@ -321,6 +344,9 @@ class GameScreen(Screen):
         self.update_slash(touch)
 
     def on_touch_move(self, touch):
+        if self.is_paused:
+            return super().on_touch_move(touch)
+            
         self.check_collision(touch)
         if 'trail' not in touch.ud: return super().on_touch_move(touch)
         last_x, last_y = touch.ud['trail'][-1]
@@ -352,6 +378,9 @@ class GameScreen(Screen):
         touch.ud['mesh_core'].indices = indices
 
     def on_touch_up(self, touch):
+        if self.is_paused:
+            return super().on_touch_up(touch)
+            
         if 'decay_event' in touch.ud: touch.ud['decay_event'].cancel()
         if 'mesh_glow' in touch.ud:
             self.canvas.remove(touch.ud['color_glow'])
