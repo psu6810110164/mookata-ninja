@@ -129,73 +129,61 @@
             pos_hint: {"x": 0.05, "top": 0.98}
             size_hint: None, None
 
-        # แถบ UI มุมขวาบน (Responsive)
         BoxLayout:
             orientation: 'horizontal'
             size_hint: None, None
-            size: self.minimum_size
+            height: root.height * 0.09   # 👈 กำหนดความสูงแถวชัดเจน
+            size: self.minimum_width, self.height
             pos_hint: {"right": 0.98, "top": 0.98}
-            spacing: 5
+            spacing: root.height * 0.01
 
+            # ❤️ หัวใจ
             Image:
                 id: life_1
-                source: 'assets/images/heart_full.png'
                 size_hint: None, None
-                size: root.height * 0.08, root.height * 0.08
+                size: root.height * 0.085, root.height * 0.085
                 allow_stretch: True
                 keep_ratio: True
 
             Image:
                 id: life_2
-                source: 'assets/images/heart_full.png'
                 size_hint: None, None
-                size: root.height * 0.08, root.height * 0.08
+                size: root.height * 0.085, root.height * 0.085
                 allow_stretch: True
                 keep_ratio: True
 
             Image:
                 id: life_3
-                source: 'assets/images/heart_full.png'
                 size_hint: None, None
-                size: root.height * 0.08, root.height * 0.08
+                size: root.height * 0.085, root.height * 0.085
                 allow_stretch: True
                 keep_ratio: True
 
+            # ⏸ ปุ่มหยุด
             Button:
                 text: "II"
                 size_hint: None, None
-                size: 46, 46
-                pos_hint: {'right': 0.98, 'top': 0.98}
+                size: root.height * 0.07, root.height * 0.07
 
                 background_normal: ''
                 background_down: ''
-                background_color: 0, 0, 0, 0   # ไม่มีพื้นหลังเลย
-                color: 1, 1, 1, 1              # ตัวอักษรขาว
+                background_color: 0,0,0,0
+                color: 1,1,1,1
                 bold: True
-                font_size: '22sp'
+                font_size: self.height * 0.45
 
                 canvas.before:
-                    # เงาบาง ๆ
                     Color:
-                        rgba: 0, 0, 0, 0.25
-                    RoundedRectangle:
-                        pos: self.x, self.y - 2
-                        size: self.size
-                        radius: [18]
-
-                    # วงกลมขาวโปร่งมาก
-                    Color:
-                        rgba: 1, 1, 1, 0.15   # โปร่งมาก เห็นเกมด้านหลัง
+                        rgba: 1, 1, 1, 0.15
                     RoundedRectangle:
                         pos: self.pos
                         size: self.size
-                        radius: [18]
+                        radius: [10]
 
-                    # เส้นขอบขาว
                     Color:
-                        rgba: 1, 1, 1, 0.7
+                        rgba: 1,1,1,0.7
                     Line:
-                        rounded_rectangle: (self.x, self.y, self.width, self.height, 18)
+                        rounded_rectangle: (self.x, self.y, self.width, self.height, 10)
                         width: 1.2
 
                 on_release: root.pause_game()
