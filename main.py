@@ -315,16 +315,25 @@ class GameScreen(Screen):
         normal_size = 60
         pop_size = 90
         
-        self.ids.combo_main.color = (1, 0.8, 0, 1)
+        main_color = (1, 0.85, 0, 1)
+        shadow_color = (0.6, 0.45, 0, 1)
+        highlight_color = (1, 1, 0.4, 1)
+
         for lbl_id in ['combo_shadow', 'combo_main', 'combo_highlight']:
             lbl = self.ids[lbl_id]
             lbl.text = txt
             lbl.font_size = normal_size
             lbl.center_x = safe_x
             lbl.center_y = safe_y
-            if lbl_id == 'combo_shadow': lbl.center_y -= 2
-            if lbl_id == 'combo_highlight': lbl.center_y += 2
-
+            if lbl_id == 'combo_shadow':
+                lbl.color = shadow_color
+                lbl.center_y -= 3
+            elif lbl_id == 'combo_highlight':
+                lbl.color = highlight_color
+                lbl.center_y += 3
+            else:
+                lbl.color = main_color
+                
         anim = Animation(font_size=pop_size, duration=0.1, t='out_back') + \
                Animation(font_size=normal_size, duration=0.1)
         anim.start(self.ids.combo_shadow)
