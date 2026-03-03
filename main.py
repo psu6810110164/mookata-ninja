@@ -239,6 +239,18 @@ class GameScreen(Screen):
                     self.remove_widget(item)
                     self.game_objects.remove(item)
 
+    def trigger_screenshake(self):
+        magnitude = 10
+        duration = 0.04
+
+        anim = Animation(x=rnd.uniform(-magnitude, magnitude), y=rnd.uniform(-magnitude, magnitude), duration=duration, t='linear') #
+        anim += Animation(x=rnd.uniform(-magnitude, magnitude), y=rnd.uniform(-magnitude, magnitude), duration=duration, t='linear') #
+        anim += Animation(x=rnd.uniform(-magnitude, magnitude), y=rnd.uniform(-magnitude, magnitude), duration=duration, t='linear') #
+        anim += Animation(x=0, y=0, duration=duration, t='out_quad') #
+
+        anim.start(self)
+
+
     def create_slice_effect(self, item, slash_angle):
         if not item.texture: return
         orig_center = item.center
@@ -253,37 +265,31 @@ class GameScreen(Screen):
         with self.canvas.after:
             flash_color = Color(1, 0, 0, 0.6)
             flash_rect = Rectangle(pos=(0, 0), size=Window.size)
+            wave1_color = Color(1, 0.4, 0, 0.9)
+            wave1 = Ellipse(pos=(x-50, y-50), size=(100, 100))
+            wave2_color = Color(1, 0.8, 0, 0.9)
+            wave2 = Ellipse(pos=(x-25, y-25), size=(50, 50))
 
         anim_flash = Animation(a=0, duration=0.3)
-        anim_flash.start(flash_color)
-
-        img_size = 50
-        explosion = Image(
-            source='assets/images/explosion_effect.png', 
-            size_hint=(None, None),
-            size=(img_size, img_size),
-            pos=(x - img_size/2, y - img_size/2)
-        )
-        
-        insert_idx = len(self.children) - 1 if len(self.children) > 0 else 0
-        self.add_widget(explosion, index=insert_idx)
-
-        target_size = 350
-        anim_exp = Animation(
-            size=(target_size, target_size),
-            pos=(x - target_size/2, y - target_size/2),
-            duration=0.3,
-            t='out_quad'
-        ) + Animation(opacity=0, duration=0.2)
+        anim_w1 = Animation(size=(400, 400), pos=(x-200, y-200), duration=0.5, t='out_quad')
+        anim_c1 = Animation(a=0, duration=0.5)
+        anim_w2 = Animation(size=(250, 250), pos=(x-125, y-125), duration=0.4, t='out_quad')
+        anim_c2 = Animation(a=0, duration=0.4)
 
         def remove_effect(anim, widget):
-            if explosion in self.children:
-                self.remove_widget(explosion)
             self.canvas.after.remove(flash_color)
             self.canvas.after.remove(flash_rect)
+            self.canvas.after.remove(wave1_color)
+            self.canvas.after.remove(wave1)
+            self.canvas.after.remove(wave2_color)
+            self.canvas.after.remove(wave2)
 
-        anim_exp.bind(on_complete=remove_effect)
-        anim_exp.start(explosion)
+        anim_w1.bind(on_complete=remove_effect)
+        anim_flash.start(flash_color)
+        anim_w1.start(wave1)
+        anim_c1.start(wave1_color)
+        anim_w2.start(wave2)
+        anim_c2.start(wave2_color)
 
     def create_hit_effect(self, x, y):
         with self.canvas.after:
