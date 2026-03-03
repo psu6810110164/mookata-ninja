@@ -197,7 +197,7 @@ class GameScreen(Screen):
                     self.game_objects.remove(item)
 
     def trigger_screenshake(self):
-        magnitude = 20
+        magnitude = 10
         duration = 0.04
         
         anim = Animation(x=rnd.uniform(-magnitude, magnitude), y=rnd.uniform(-magnitude, magnitude), duration=duration, t='linear') #
@@ -220,14 +220,14 @@ class GameScreen(Screen):
             flash_color = Color(1, 0, 0, 0.6)
             flash_rect = Rectangle(pos=(0, 0), size=Window.size)
             wave1_color = Color(1, 0.4, 0, 0.9)
-            wave1 = Ellipse(pos=(x-50, y-50), size=(200, 200))
+            wave1 = Ellipse(pos=(x-50, y-50), size=(100, 100))
             wave2_color = Color(1, 0.8, 0, 0.9)
-            wave2 = Ellipse(pos=(x-35, y-35), size=(70, 70))
+            wave2 = Ellipse(pos=(x-25, y-25), size=(50, 50))
 
         anim_flash = Animation(a=0, duration=0.3)
-        anim_w1 = Animation(size=(800, 800), pos=(x-400, y-400), duration=0.5, t='out_quad')
+        anim_w1 = Animation(size=(400, 400), pos=(x-200, y-200), duration=0.5, t='out_quad')
         anim_c1 = Animation(a=0, duration=0.5)
-        anim_w2 = Animation(size=(500, 500), pos=(x-250, y-250), duration=0.4, t='out_quad')
+        anim_w2 = Animation(size=(250, 250), pos=(x-125, y-125), duration=0.4, t='out_quad')
         anim_c2 = Animation(a=0, duration=0.4)
 
         def remove_effect(anim, widget):
