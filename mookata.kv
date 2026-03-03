@@ -129,25 +129,46 @@
             pos_hint: {"x": 0.05, "top": 0.98}
             size_hint: None, None
 
-        # UI แสดงเลือด (หัวใจ 3 ดวง)
+        # แถบ UI มุมขวาบน (Responsive)
         BoxLayout:
-            id: lives_layout
             orientation: 'horizontal'
             size_hint: None, None
-            size: 180, 60
-            pos_hint: {"right": 0.9, "top": 0.98}
+            size: self.minimum_size
+            pos_hint: {"right": 0.98, "top": 0.98}
             spacing: 5
+
             Image:
                 id: life_1
                 source: 'assets/images/heart_full.png'
+                size_hint: None, None
+                size: root.height * 0.08, root.height * 0.08
+                allow_stretch: True
+                keep_ratio: True
+
             Image:
                 id: life_2
                 source: 'assets/images/heart_full.png'
+                size_hint: None, None
+                size: root.height * 0.08, root.height * 0.08
+                allow_stretch: True
+                keep_ratio: True
+
             Image:
                 id: life_3
                 source: 'assets/images/heart_full.png'
+                size_hint: None, None
+                size: root.height * 0.08, root.height * 0.08
                 allow_stretch: True
                 keep_ratio: True
+
+            Button:
+                text: "||"
+                font_size: root.height * 0.05
+                bold: True
+                size_hint: None, None
+                size: root.height * 0.1, root.height * 0.1
+                background_color: 0, 0, 0, 0.6
+                on_release: root.pause_game()
         
         Label:
             id: combo_shadow
@@ -191,17 +212,6 @@
             id: combo_highlight
             font_size: '60sp'
             bold: True
-
-        # ปุ่ม Pause (มุมขวาบน)
-        Button:
-            text: "||"
-            font_size: '30sp'
-            bold: True
-            size_hint: None, None
-            size: 60, 60
-            pos_hint: {"right": 0.98, "top": 0.98}
-            background_color: 0, 0, 0, 0.6
-            on_release: root.pause_game()
 
     # หน้าต่างเมนู Pause (ซ่อนไว้ตอนเริ่ม)
         BoxLayout:
