@@ -3,3 +3,4 @@ NEW: 20
 NEW1: 180
 N: 160
 Unknown Ninja: 290
+Unknown Ninja: 330
