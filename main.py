@@ -11,7 +11,9 @@ from kivy.clock import Clock
 from game_objects import FallingItem
 from kivy.animation import Animation
 from kivy.uix.image import Image
-from audio_manager import AudioManager
+
+import random as rnd
+
 try:
     from audio_manager import AudioManager
 except ImportError:
@@ -66,7 +68,7 @@ class SlicedHalf(Image):
         target_rot = alpha + (dir_sign * 120)
         
         anim_pos = Animation(pos=peak_pos, duration=0.3, t='out_quad') + \
-                    Animation(pos=target_pos, opacity=0, duration=1.2, t='in_quad')
+                   Animation(pos=target_pos, opacity=0, duration=1.2, t='in_quad')
         anim_rot = Animation(angle=target_rot, duration=1.5, t='linear')
         
         anim_pos.bind(on_complete=self.remove_self)
@@ -175,6 +177,7 @@ class GameScreen(Screen):
                     self.ids.combo_main.text = ""
                     self.ids.combo_highlight.text = ""
                     self.create_bomb_effect(touch.x, touch.y)
+                    self.trigger_screenshake()
                     self.remove_widget(item)
                     self.game_objects.remove(item)
                 else:
@@ -192,6 +195,17 @@ class GameScreen(Screen):
                     self.create_hit_effect(touch.x, touch.y)
                     self.remove_widget(item)
                     self.game_objects.remove(item)
+
+    def trigger_screenshake(self):
+        magnitude = 20
+        duration = 0.04
+        
+        anim = Animation(x=rnd.uniform(-magnitude, magnitude), y=rnd.uniform(-magnitude, magnitude), duration=duration, t='linear') #
+        anim += Animation(x=rnd.uniform(-magnitude, magnitude), y=rnd.uniform(-magnitude, magnitude), duration=duration, t='linear') #
+        anim += Animation(x=rnd.uniform(-magnitude, magnitude), y=rnd.uniform(-magnitude, magnitude), duration=duration, t='linear') #
+        anim += Animation(x=0, y=0, duration=duration, t='out_quad') #
+        
+        anim.start(self)
 
     def create_slice_effect(self, item, slash_angle):
         if not item.texture: return
@@ -254,17 +268,27 @@ class GameScreen(Screen):
         safe_y = max(margin, min(item_y + 80, Window.height - margin))
         normal_size = 60
         pop_size = 90
-        self.ids.combo_main.color = (1, 0.8, 0, 1)
-        for lbl_id in ['combo_shadow', 'combo_main', 'combo_highlight']:
-            lbl = self.ids[lbl_id]
-            lbl.text = txt
-            lbl.font_size = normal_size
-            lbl.center_x = safe_x
-            lbl.center_y = safe_y
-            if lbl_id == 'combo_shadow': lbl.center_y -= 2
-            if lbl_id == 'combo_highlight': lbl.center_y += 2
+        
+        self.ids.combo_shadow.text = txt
+        self.ids.combo_shadow.center_x = safe_x
+        self.ids.combo_shadow.center_y = safe_y - 2
+        self.ids.combo_shadow.color = (0, 0, 0.5, 1)
+        self.ids.combo_shadow.font_size = normal_size
+
+        self.ids.combo_main.text = txt
+        self.ids.combo_main.center_x = safe_x
+        self.ids.combo_main.center_y = safe_y
+        self.ids.combo_main.color = (0, 0.6, 1, 1)
+        self.ids.combo_main.font_size = normal_size
+
+        self.ids.combo_highlight.text = txt
+        self.ids.combo_highlight.center_x = safe_x
+        self.ids.combo_highlight.center_y = safe_y + 2
+        self.ids.combo_highlight.color = (0.8, 1, 1, 1)
+        self.ids.combo_highlight.font_size = normal_size
+        
         anim = Animation(font_size=pop_size, duration=0.1, t='out_back') + \
-                Animation(font_size=normal_size, duration=0.1)
+               Animation(font_size=normal_size, duration=0.1)
         anim.start(self.ids.combo_shadow)
         anim.start(self.ids.combo_main)
         anim.start(self.ids.combo_highlight)
