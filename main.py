@@ -333,7 +333,6 @@ class GameScreen(Screen):
                 lbl.center_y += 3
             else:
                 lbl.color = main_color
-                
         anim = Animation(font_size=pop_size, duration=0.1, t='out_back') + \
                Animation(font_size=normal_size, duration=0.1)
         anim.start(self.ids.combo_shadow)
