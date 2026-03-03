@@ -13,11 +13,7 @@ from kivy.animation import Animation
 from kivy.uix.image import Image
 
 import random as rnd
-
-try:
-    from audio_manager import AudioManager
-except ImportError:
-    pass
+from audio_manager import AudioManager
 
 Window.size = (800, 450)
 
@@ -98,7 +94,8 @@ class GameScreen(Screen):
 
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
-        self.audio = AudioManager()
+        # AudioManager is created lazily in on_enter to avoid
+        # audio backend initialization/order issues.
 
     def on_enter(self):
         self.game_objects = []
@@ -114,6 +111,12 @@ class GameScreen(Screen):
         self.ids.combo_main.text = ""
         self.ids.combo_highlight.text = ""
         self.update_lives(self.temp_hp)
+        # Ensure audio manager exists after app startup / event loop init
+        if not hasattr(self, 'audio') or self.audio is None:
+            try:
+                self.audio = AudioManager()
+            except Exception as e:
+                print('Main: failed to create AudioManager on_enter:', e)
         
         if 'pause_overlay' in self.ids:
             self.ids.pause_overlay.opacity = 0
