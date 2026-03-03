@@ -162,14 +162,44 @@
                 keep_ratio: True
 
             Button:
-                text: "||"
-                font_size: root.height * 0.05
-                bold: True
+                text: "II"
                 size_hint: None, None
-                size: root.height * 0.1, root.height * 0.1
-                background_color: 0, 0, 0, 0.6
+                size: 46, 46
+                pos_hint: {'right': 0.98, 'top': 0.98}
+
+                background_normal: ''
+                background_down: ''
+                background_color: 0, 0, 0, 0   # ไม่มีพื้นหลังเลย
+                color: 1, 1, 1, 1              # ตัวอักษรขาว
+                bold: True
+                font_size: '22sp'
+
+                canvas.before:
+                    # เงาบาง ๆ
+                    Color:
+                        rgba: 0, 0, 0, 0.25
+                    RoundedRectangle:
+                        pos: self.x, self.y - 2
+                        size: self.size
+                        radius: [18]
+
+                    # วงกลมขาวโปร่งมาก
+                    Color:
+                        rgba: 1, 1, 1, 0.15   # โปร่งมาก เห็นเกมด้านหลัง
+                    RoundedRectangle:
+                        pos: self.pos
+                        size: self.size
+                        radius: [18]
+
+                    # เส้นขอบขาว
+                    Color:
+                        rgba: 1, 1, 1, 0.7
+                    Line:
+                        rounded_rectangle: (self.x, self.y, self.width, self.height, 18)
+                        width: 1.2
+
                 on_release: root.pause_game()
-        
+
         Label:
             id: combo_shadow
             text: ""
@@ -213,38 +243,105 @@
             font_size: '60sp'
             bold: True
 
-    # หน้าต่างเมนู Pause (ซ่อนไว้ตอนเริ่ม)
+    # หน้าต่างเมนู Pause (Modern Version)
         BoxLayout:
             id: pause_overlay
             orientation: 'vertical'
             size_hint: None, None
-            size: 300, 250
+            size: 340, 270
             pos_hint: {'center_x': 0.5, 'center_y': 0.5}
+            spacing: 15
+            padding: 20
             opacity: 0
             disabled: True
+
             canvas.before:
+                # เงาด้านล่าง (depth)
                 Color:
-                    rgba: 0, 0, 0, 0.9
+                    rgba: 0, 0, 0, 0.4
+                RoundedRectangle:
+                    pos: self.x, self.y - 8
+                    size: self.size
+                    radius: [25]
+
+                # พื้นหลังแดงเข้ม
+                Color:
+                    rgba: 0.5, 0, 0, 0.95
                 RoundedRectangle:
                     pos: self.pos
                     size: self.size
-                    radius: [20]
+                    radius: [25]
+
+                # ขอบทอง
+                Color:
+                    rgba: 1, 0.8, 0.2, 1
+                Line:
+                    rounded_rectangle: (self.x, self.y, self.width, self.height, 25)
+                    width: 2
+
             Label:
                 text: "PAUSED"
-                font_size: '35sp'
+                font_size: '36sp'
                 bold: True
-                size_hint_y: 0.4
+                color: 1, 0.9, 0.4, 1   # ทอง
+                size_hint_y: 0.35
+
             Button:
                 text: "RESUME"
-                font_size: '25sp'
+                font_size: '24sp'
+                bold: True
                 size_hint_y: 0.3
-                background_color: 0, 0.8, 0, 1
+                background_normal: ''
+                background_down: ''
+                background_color: 0,0,0,0
+                color: 1,1,1,1
+
+                canvas.before:
+                    # เงาปุ่ม
+                    Color:
+                        rgba: 0,0,0,0.3
+                    RoundedRectangle:
+                        pos: self.x, self.y - 4
+                        size: self.size
+                        radius: [20]
+
+                    # ปุ่มเขียวไล่โทนสด
+                    Color:
+                        rgba: 0.1, 0.9, 0.3, 1
+                    RoundedRectangle:
+                        pos: self.pos
+                        size: self.size
+                        radius: [20]
+
                 on_release: root.resume_game()
+
             Button:
                 text: "QUIT GAME"
-                font_size: '25sp'
+                font_size: '24sp'
+                bold: True
                 size_hint_y: 0.3
-                background_color: 0.8, 0, 0, 1
+                background_normal: ''
+                background_down: ''
+                background_color: 0,0,0,0
+                color: 1,1,1,1
+
+                canvas.before:
+                    # เงาปุ่ม
+                    Color:
+                        rgba: 0,0,0,0.3
+                    RoundedRectangle:
+                        pos: self.x, self.y - 4
+                        size: self.size
+                        radius: [20]
+
+                    # ปุ่มแดงสด
+                    Color:
+                        rgba: 1, 0.2, 0.2, 1
+                    RoundedRectangle:
+                        pos: self.pos
+                        size: self.size
+                        radius: [20]
+
                 on_release: root.quit_game()
 
 <GameOverScreen>:
