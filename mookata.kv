@@ -84,9 +84,11 @@
                     size_hint_x: 0.3
                 Slider:
                     min: 0
-                    max: 100
-                    value: 50
-                    cursor_size: (30, 30)
+                    max: 1
+                    value: 0.5
+                    step: 0.1
+                    orientation: 'horizontal'
+                    on_value: root.on_volume_change(self.value)
 
             # ส่วนเปิด/ปิดเสียง
             BoxLayout:
@@ -111,6 +113,14 @@
             background_color: 1, 1, 1, 1
             on_release: app.root.current = "menu"
 
+        ToggleButton:
+            id: mute_checkbox
+            text: "MUTE"
+            size_hint: 0.15, 0.08
+            bold: True
+            pos_hint: {"center_x": 0.55, "center_y": 0.35}
+            on_state: self.text = "ON" if self.state == 'down' else "OFF"
+            on_state: root.on_mute_change(self.state == 'down')
 <GameScreen>:
     FloatLayout:
         # พื้นหลังขณะเล่น (อาจใช้ภาพเดียวกับหน้าเมนูหรือภาพเรียบๆ)
