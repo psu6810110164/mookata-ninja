@@ -235,11 +235,15 @@
         BoxLayout:
             id: pause_overlay
             orientation: 'vertical'
+
             size_hint: None, None
-            size: 340, 270
+            width: root.width * 0.4
+            height: root.height * 0.5
+
             pos_hint: {'center_x': 0.5, 'center_y': 0.5}
-            spacing: 15
-            padding: 20
+            spacing: root.height * 0.02
+            padding: root.width * 0.04
+
             opacity: 0
             disabled: True
 
