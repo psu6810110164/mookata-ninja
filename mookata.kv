@@ -122,9 +122,9 @@
         # UI คะแนน
         Label:
             id: current_score_label
-            text: "Score: " + str(root.score)
-            text: "Score: 0"
-            font_size: '30sp'
+            text: "Score: 0"   
+            font_name: 'assets/fonts/Bangers.ttf' 
+            font_size: '40sp'  
             bold: True
             pos_hint: {"x": 0.05, "top": 0.98}
             size_hint: None, None
@@ -135,7 +135,7 @@
             orientation: 'horizontal'
             size_hint: None, None
             size: 180, 60
-            pos_hint: {"right": 0.98, "top": 0.98}
+            pos_hint: {"right": 0.9, "top": 0.98}
             spacing: 5
             Image:
                 id: life_1
@@ -178,11 +178,6 @@
             color: 0.8, 0.95, 1, 1
             pos: (-1000, -1000)
 
-        Button:
-            text: "Pause"
-            size_hint: 0.15, 0.1
-            pos_hint: {"right": 0.95, "top": 0.8}
-
         # Layer สำหรับข้อความ Combo (จัดวางตามโค้ด Python)
         Label:
             id: combo_shadow
@@ -196,6 +191,51 @@
             id: combo_highlight
             font_size: '60sp'
             bold: True
+
+        # ปุ่ม Pause (มุมขวาบน)
+        Button:
+            text: "||"
+            font_size: '30sp'
+            bold: True
+            size_hint: None, None
+            size: 60, 60
+            pos_hint: {"right": 0.98, "top": 0.98}
+            background_color: 0, 0, 0, 0.6
+            on_release: root.pause_game()
+
+    # หน้าต่างเมนู Pause (ซ่อนไว้ตอนเริ่ม)
+        BoxLayout:
+            id: pause_overlay
+            orientation: 'vertical'
+            size_hint: None, None
+            size: 300, 250
+            pos_hint: {'center_x': 0.5, 'center_y': 0.5}
+            opacity: 0
+            disabled: True
+            canvas.before:
+                Color:
+                    rgba: 0, 0, 0, 0.9
+                RoundedRectangle:
+                    pos: self.pos
+                    size: self.size
+                    radius: [20]
+            Label:
+                text: "PAUSED"
+                font_size: '35sp'
+                bold: True
+                size_hint_y: 0.4
+            Button:
+                text: "RESUME"
+                font_size: '25sp'
+                size_hint_y: 0.3
+                background_color: 0, 0.8, 0, 1
+                on_release: root.resume_game()
+            Button:
+                text: "QUIT GAME"
+                font_size: '25sp'
+                size_hint_y: 0.3
+                background_color: 0.8, 0, 0, 1
+                on_release: root.quit_game()
 
 <GameOverScreen>:
     FloatLayout:

@@ -16,8 +16,12 @@ class FallingItem(Image):
             
         self.size_hint = (None, None)
         base_size = Window.height * 0.15
-        self.size = (base_size, base_size)
         
+        if self.is_bomb:
+            self.size = (base_size * 2, base_size * 2)
+        else:
+            self.size = (base_size, base_size)
+            
         screen_w = Window.width
         self.x = randint(int(screen_w * 0.1), int(screen_w * 0.9))
         self.y = -self.height
