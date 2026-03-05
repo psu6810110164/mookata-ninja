@@ -13,11 +13,7 @@ from kivy.animation import Animation
 from kivy.uix.image import Image
 
 import random as rnd
-
-try:
-    from audio_manager import AudioManager
-except ImportError:
-    pass
+from audio_manager import AudioManager
 
 Window.size = (800, 450)
 
@@ -114,6 +110,8 @@ class GameScreen(Screen):
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
         self.audio = None
+        # AudioManager is created lazily in on_enter to avoid
+        # audio backend initialization/order issues.
 
     def on_enter(self):
         app = App.get_running_app()
@@ -132,6 +130,12 @@ class GameScreen(Screen):
         self.ids.combo_main.text = ""
         self.ids.combo_highlight.text = ""
         self.update_lives(self.temp_hp)
+        # Ensure audio manager exists after app startup / event loop init
+        if not hasattr(self, 'audio') or self.audio is None:
+            try:
+                self.audio = AudioManager()
+            except Exception as e:
+                print('Main: failed to create AudioManager on_enter:', e)
         
         if 'pause_overlay' in self.ids:
             self.ids.pause_overlay.opacity = 0
@@ -257,6 +261,18 @@ class GameScreen(Screen):
                     self.remove_widget(item)
                     self.game_objects.remove(item)
 
+    def trigger_screenshake(self):
+        magnitude = 10
+        duration = 0.04
+
+        anim = Animation(x=rnd.uniform(-magnitude, magnitude), y=rnd.uniform(-magnitude, magnitude), duration=duration, t='linear') #
+        anim += Animation(x=rnd.uniform(-magnitude, magnitude), y=rnd.uniform(-magnitude, magnitude), duration=duration, t='linear') #
+        anim += Animation(x=rnd.uniform(-magnitude, magnitude), y=rnd.uniform(-magnitude, magnitude), duration=duration, t='linear') #
+        anim += Animation(x=0, y=0, duration=duration, t='out_quad') #
+
+        anim.start(self)
+
+
     def create_slice_effect(self, item, slash_angle):
         if not item.texture: return
         orig_center = item.center
@@ -271,37 +287,31 @@ class GameScreen(Screen):
         with self.canvas.after:
             flash_color = Color(1, 0, 0, 0.6)
             flash_rect = Rectangle(pos=(0, 0), size=Window.size)
+            wave1_color = Color(1, 0.4, 0, 0.9)
+            wave1 = Ellipse(pos=(x-50, y-50), size=(100, 100))
+            wave2_color = Color(1, 0.8, 0, 0.9)
+            wave2 = Ellipse(pos=(x-25, y-25), size=(50, 50))
 
         anim_flash = Animation(a=0, duration=0.3)
-        anim_flash.start(flash_color)
-
-        img_size = 50
-        explosion = Image(
-            source='assets/images/explosion_effect.png', 
-            size_hint=(None, None),
-            size=(img_size, img_size),
-            pos=(x - img_size/2, y - img_size/2)
-        )
-        
-        insert_idx = len(self.children) - 1 if len(self.children) > 0 else 0
-        self.add_widget(explosion, index=insert_idx)
-
-        target_size = 350
-        anim_exp = Animation(
-            size=(target_size, target_size),
-            pos=(x - target_size/2, y - target_size/2),
-            duration=0.3,
-            t='out_quad'
-        ) + Animation(opacity=0, duration=0.2)
+        anim_w1 = Animation(size=(400, 400), pos=(x-200, y-200), duration=0.5, t='out_quad')
+        anim_c1 = Animation(a=0, duration=0.5)
+        anim_w2 = Animation(size=(250, 250), pos=(x-125, y-125), duration=0.4, t='out_quad')
+        anim_c2 = Animation(a=0, duration=0.4)
 
         def remove_effect(anim, widget):
-            if explosion in self.children:
-                self.remove_widget(explosion)
             self.canvas.after.remove(flash_color)
             self.canvas.after.remove(flash_rect)
+            self.canvas.after.remove(wave1_color)
+            self.canvas.after.remove(wave1)
+            self.canvas.after.remove(wave2_color)
+            self.canvas.after.remove(wave2)
 
-        anim_exp.bind(on_complete=remove_effect)
-        anim_exp.start(explosion)
+        anim_w1.bind(on_complete=remove_effect)
+        anim_flash.start(flash_color)
+        anim_w1.start(wave1)
+        anim_c1.start(wave1_color)
+        anim_w2.start(wave2)
+        anim_c2.start(wave2_color)
 
     def create_hit_effect(self, x, y):
         with self.canvas.after:
@@ -327,16 +337,24 @@ class GameScreen(Screen):
         normal_size = 60
         pop_size = 90
         
-        self.ids.combo_main.color = (1, 0.8, 0, 1)
+        main_color = (1, 0.85, 0, 1)
+        shadow_color = (0.6, 0.45, 0, 1)
+        highlight_color = (1, 1, 0.4, 1)
+
         for lbl_id in ['combo_shadow', 'combo_main', 'combo_highlight']:
             lbl = self.ids[lbl_id]
             lbl.text = txt
             lbl.font_size = normal_size
             lbl.center_x = safe_x
             lbl.center_y = safe_y
-            if lbl_id == 'combo_shadow': lbl.center_y -= 2
-            if lbl_id == 'combo_highlight': lbl.center_y += 2
-
+            if lbl_id == 'combo_shadow':
+                lbl.color = shadow_color
+                lbl.center_y -= 3
+            elif lbl_id == 'combo_highlight':
+                lbl.color = highlight_color
+                lbl.center_y += 3
+            else:
+                lbl.color = main_color
         anim = Animation(font_size=pop_size, duration=0.1, t='out_back') + \
                Animation(font_size=normal_size, duration=0.1)
         anim.start(self.ids.combo_shadow)
