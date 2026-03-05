@@ -106,6 +106,7 @@ class GameScreen(Screen):
     combo_count = 0
     last_hit_time = 0
     is_paused = False
+    time_scale = 1.0
 
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
@@ -145,6 +146,7 @@ class GameScreen(Screen):
             self.audio.play_bgm()
         Clock.schedule_interval(self.game_loop, 1.0/60.0)
         self.spawn_next_item(0)
+        self.time_scale = 1.0
 
     def on_leave(self):
         if hasattr(self, 'audio') and hasattr(self.audio, 'stop_bgm'):
@@ -191,26 +193,34 @@ class GameScreen(Screen):
         if difficulty_level > 1: spawn_count = randint(1, 2)
         if difficulty_level > 3: spawn_count = randint(2, 4)
         if difficulty_level > 5: spawn_count = randint(3, 6)
+        
         for _ in range(spawn_count):
-            is_bomb = False
-            if difficulty_level > 0.5 and random() < 0.15: is_bomb = True
-            item = FallingItem(difficulty=difficulty_level, is_bomb=is_bomb)
-            
+            item_type = 'normal'
+            # 👇 สุ่มโอกาสเกิดไอเทมพิเศษ
+            if difficulty_level > 0.5:
+                rand_val = random()
+                if rand_val < 0.10: 
+                    item_type = 'bomb'
+                elif rand_val < 0.15: # โอกาส 5%
+                    item_type = 'ice'
+                elif rand_val < 0.20: # โอกาส 5%
+                    item_type = 'chili'
+                    
+            item = FallingItem(difficulty=difficulty_level, item_type=item_type)
             insert_idx = len(self.children) - 1 if len(self.children) > 0 else 0
             self.add_widget(item, index=insert_idx)
-            
             self.game_objects.append(item)
+            
         base_delay = max(0.8, 2.5 - (self.time_elapsed * 0.05))
         next_spawn_delay = base_delay + (randint(-3, 3) * 0.1)
         Clock.schedule_once(self.spawn_next_item, next_spawn_delay)
 
     def game_loop(self, dt):
-        if self.is_paused:
-            return
-            
+        if self.is_paused: return
         self.time_elapsed += dt
+        
         for item in self.game_objects[:]:
-            item.update()
+            item.update(self.time_scale) # 👇 ใส่ time_scale ตรงนี้
             if item.y < -item.height * 2:
                 self.remove_widget(item)
                 self.game_objects.remove(item)
@@ -243,6 +253,22 @@ class GameScreen(Screen):
                     self.ids.combo_highlight.text = ""
                     self.create_bomb_effect(touch.x, touch.y)
                     self.trigger_screenshake()
+                    self.remove_widget(item)
+                    self.game_objects.remove(item)
+                elif item.item_type == 'ice':
+                    # ฟันโดนน้ำแข็ง
+                    if hasattr(self, 'audio') and hasattr(self.audio, 'play_slash'):
+                        self.audio.play_slash()
+                    self.trigger_slowmo()
+                    self.create_slice_effect(item, slash_angle)
+                    self.remove_widget(item)
+                    self.game_objects.remove(item)
+                elif item.item_type == 'chili':
+                    # ฟันโดนพริก
+                    if hasattr(self, 'audio') and hasattr(self.audio, 'play_slash'):
+                        self.audio.play_slash()
+                    self.trigger_frenzy()
+                    self.create_slice_effect(item, slash_angle)
                     self.remove_widget(item)
                     self.game_objects.remove(item)
                 else:
@@ -451,6 +477,33 @@ class GameScreen(Screen):
                 game_over_screen.ids.score_label.text = f"Your Score: {self.score}"
             game_over_screen.final_score = self.score 
             self.manager.current = "gameover"
+
+    def trigger_slowmo(self):
+        self.time_scale = 0.3  # ทำให้เกมช้าลงเหลือ 30%
+        Clock.unschedule(self.reset_slowmo)
+        Clock.schedule_once(self.reset_slowmo, 3.0) # สโลว์นาน 3 วินาที
+
+    def reset_slowmo(self, dt):
+        self.time_scale = 1.0  # คืนค่าเวลาให้ปกติ
+
+    def trigger_frenzy(self):
+        Clock.unschedule(self.stop_frenzy)
+        Clock.schedule_interval(self.spawn_frenzy_item, 0.1) # เสกของทุกๆ 0.1 วินาที!
+        Clock.schedule_once(self.stop_frenzy, 2.0) # พุ่งรัวๆ นาน 2 วินาที
+
+    def stop_frenzy(self, dt):
+        Clock.unschedule(self.spawn_frenzy_item)
+
+    def spawn_frenzy_item(self, dt):
+        if self.is_paused: return
+        item = FallingItem(difficulty=3.0, item_type='normal')
+        
+        item.y = -50
+        item.x = randint(100, Window.width - 100)
+        
+        insert_idx = len(self.children) - 1 if len(self.children) > 0 else 0
+        self.add_widget(item, index=insert_idx)
+        self.game_objects.append(item)
 
 class GameOverScreen(Screen):
     final_score = 0 
