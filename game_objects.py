@@ -2,17 +2,17 @@ from math import sqrt
 from random import randint, choice
 from kivy.uix.image import Image
 from kivy.core.window import Window
-from kivy.graphics import PushMatrix, PopMatrix, Rotate
+from kivy.graphics import PushMatrix, PopMatrix, Rotate, Scale
+from kivy.animation import Animation
+from kivy.clock import Clock
 
 class FallingItem(Image):
-    # 👇 เปลี่ยนมารับค่า item_type แทน is_bomb
     def __init__(self, difficulty=1.0, item_type='normal', **kwargs):
         super().__init__(**kwargs)
         
         self.item_type = item_type
         self.is_bomb = (self.item_type == 'bomb')
         
-        # 👇 เช็กประเภทเพื่อดึงรูปให้ถูกต้อง
         if self.item_type == 'bomb':
             self.source = 'assets/images/bombb.png'
         elif self.item_type == 'ice':
@@ -57,16 +57,27 @@ class FallingItem(Image):
             self.rot = Rotate()
             self.rot.origin = self.center
             self.rot.angle = self.angle
+            self.scale = Scale(1, 1, 1)
+            self.scale.origin = self.center
         with self.canvas.after:
             PopMatrix()
             
         self.bind(pos=self.update_canvas, size=self.update_canvas)
 
+        if self.item_type == 'chili':
+            Clock.schedule_once(self.start_chili_effect, 0.1)
+
+    def start_chili_effect(self, dt):
+        anim = Animation(x=1.3, y=1.3, duration=0.15, t='out_quad') + \
+               Animation(x=1.0, y=1.0, duration=0.15, t='in_quad')
+        anim.repeat = True
+        anim.start(self.scale)
+
     def update_canvas(self, *args):
         self.rot.origin = self.center
         self.rot.angle = self.angle
+        self.scale.origin = self.center
 
-    # 👇 เพิ่ม time_scale=1.0 เพื่อรองรับระบบ Slow-motion ของน้ำแข็ง
     def update(self, time_scale=1.0):
         self.x += self.velocity_x * time_scale
         self.y += self.velocity_y * time_scale
