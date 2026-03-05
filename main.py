@@ -511,8 +511,26 @@ class GameOverScreen(Screen):
     def load_highscore(self):
         if os.path.exists("highscore.txt"):
             with open("highscore.txt", "r", encoding="utf-8") as f:
-                data = f.read()
-                if data: self.ids.highscore_label.text = f"High Score:\n{data}"
+                lines = f.readlines()
+            parsed_scores = []
+            for line in lines:
+                try:
+                    name_part, score_part = line.split(": ")
+                    parsed_scores.append({"name": name_part, "score": int(score_part)})
+                except (ValueError, IndexError):
+                    pass
+            if not parsed_scores:
+                self.ids.highscore_label.text = "No Scores Yet"
+                return
+            top_entry = max(parsed_scores, key=lambda x: x['score'])
+            
+            recent_entries = parsed_scores[-3:][::-1] 
+            
+            display_text = f"TOP SCORE: {top_entry['name']}: {top_entry['score']}\n\nRECORDS 3 RECENT:\n"
+            for entry in recent_entries:
+                display_text += f"{entry['name']}: {entry['score']}\n"
+            
+            self.ids.highscore_label.text = display_text
     def save_score(self):
         name = self.ids.player_name.text if self.ids.player_name.text.strip() else "Unknown Ninja"
         with open("highscore.txt", "a", encoding="utf-8") as f: f.write(f"{name}: {self.final_score}\n")

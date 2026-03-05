@@ -368,24 +368,24 @@
             source: 'assets/images/gameover.jpg'
             allow_stretch: True
             keep_ratio: False
-            color: 0.3, 0.3, 0.3, 1  # ปรับสีให้มืดลงมากกกว่าหน้า Setting
+            color: 0.3, 0.3, 0.3, 1  
 
         # 2. ป้ายหัวข้อ GAME OVER
         Label:
             text: "GAME OVER"
             font_size: '70sp'
             bold: True
-            color: 1, 0.2, 0.2, 1  # สีแดงสว่าง
+            color: 1, 0.2, 0.2, 1 
             outline_color: 0, 0, 0, 1
             outline_width: 3
-            pos_hint: {"center_x": 0.5, "center_y": 0.8}
+            pos_hint: {"center_x": 0.5, "center_y": 0.85}
 
-        # 3. ส่วนแสดงคะแนน (Score Display)
+        # 3. ส่วนแสดงคะแนน (ปรับให้กล่องกว้างและสูงขึ้น ไม่ทับกัน)
         BoxLayout:
             orientation: 'vertical'
-            size_hint: 0.6, 0.3
+            size_hint: 0.8, 0.45
             pos_hint: {"center_x": 0.5, "center_y": 0.55}
-            spacing: 10
+            spacing: 5
             
             Label:
                 id: score_label
@@ -393,68 +393,32 @@
                 font_size: '40sp'
                 bold: True
                 color: 1, 1, 1, 1
+                size_hint_y: 0.3  
 
             Label:
                 id: highscore_label
                 text: "High Score: --"
-                font_size: '25sp'
+                font_size: '20sp'  
                 color: 1, 0.8, 0.2, 1
+                text_size: self.size
+                halign: 'center'
+                valign: 'middle'
+                size_hint_y: 0.7
 
-        # 4. ส่วนกรอกชื่อ (Input Area)
+        # 4. ส่วนกรอกชื่อ (ขยับลงมาให้พ้นรายชื่อคะแนน)
         TextInput:
             id: player_name
             hint_text: "ENTER YOUR NAME..."
             multiline: False
             size_hint: 0.4, 0.08
-            pos_hint: {"center_x": 0.5, "center_y": 0.4}
-        Label:
-            id: score_label        
-            text: "Your Score: 0"
-            font_size: '35sp'
+            font_size: '20sp'
+            pos_hint: {"center_x": 0.5, "center_y": 0.28}
 
-        Label:
-            id: highscore_label    
-            text: "High Score: --"
-            font_size: '25sp'
-            color: 1, 0.8, 0.2, 1 
-            
-        TextInput:
-            id: player_name        
-            hint_text: "Enter your name to save..."
-            size_hint_y: None
-            height: 60
-            multiline: False
-            font_size: '24sp'
-            on_text_validate: root.save_score()  
-            
-        Button:
-            text: "SAVE SCORE"
-            size_hint_y: None
-            height: 60
-            font_size: '20sp'
-            on_release: root.save_score()        
-            
-        Button:
-            text: "PLAY AGAIN"
-            size_hint_y: None
-            height: 60
-            font_size: '20sp'
-            on_release: root.restart_game()      
-            
-        Button:
-            text: "MAIN MENU"
-            size_hint_y: None
-            height: 60
-            font_size: '20sp'
-            halign: 'center'
-            background_color: 1, 1, 1, 0.8
-
-        # 5. กลุ่มปุ่มควบคุม (Wood Buttons)
+        # 5. ปุ่มควบคุม (เหลือแค่ SAVE & RESTART)
         BoxLayout:
             orientation: 'horizontal'
-            size_hint: 0.6, 0.12
-            pos_hint: {"center_x": 0.5, "center_y": 0.25}
-            spacing: 20
+            size_hint: 0.4, 0.12
+            pos_hint: {"center_x": 0.5, "center_y": 0.15}
 
             Button:
                 text: "SAVE & RESTART"
@@ -464,7 +428,7 @@
                 on_release: 
                     root.save_score()
                     root.restart_game()
-
+            
             Button:
                 text: "MAIN MENU"
                 font_size: '18sp'
