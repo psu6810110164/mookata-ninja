@@ -139,46 +139,61 @@
             pos_hint: {"x": 0.05, "top": 0.98}
             size_hint: None, None
 
+        # --- กล่องหลัก (ครอบทั้งหมด) ---
         BoxLayout:
             orientation: 'horizontal'
             size_hint: None, None
-            height: root.height * 0.09   # 👈 กำหนดความสูงแถวชัดเจน
+            height: root.height * 0.09   
             size: self.minimum_width, self.height
-            pos_hint: {"right": 0.98, "top": 0.98}
-            spacing: root.height * 0.01
+            pos_hint: {"right": 0.96, "top": 0.98}
+            spacing: root.height * 0.03  # ระยะห่างระหว่างกลุ่มหัวใจ กับ ปุ่มหยุด
 
-            # ❤️ หัวใจ
-            Image:
-                id: life_1
+            # --- กลุ่มที่ 1: กล่องใส่หัวใจ 3 ดวง ---
+            BoxLayout:
+                orientation: 'horizontal'
                 size_hint: None, None
-                size: root.height * 0.085, root.height * 0.085
-                allow_stretch: True
-                keep_ratio: True
+                size: self.minimum_width, self.parent.height
+                pos_hint: {'center_y': 0.5}
+                spacing: root.height * 0.01
 
-            Image:
-                id: life_2
-                size_hint: None, None
-                size: root.height * 0.085, root.height * 0.085
-                allow_stretch: True
-                keep_ratio: True
+                Image:
+                    id: life_1
+                    source: 'assets/images/heart_full.png'
+                    size_hint: None, None
+                    size: root.height * 0.085, root.height * 0.085
+                    pos_hint: {'center_y': 0.5}
+                    allow_stretch: True
+                    keep_ratio: True
 
-            Image:
-                id: life_3
-                size_hint: None, None
-                size: root.height * 0.085, root.height * 0.085
-                allow_stretch: True
-                keep_ratio: True
+                Image:
+                    id: life_2
+                    source: 'assets/images/heart_full.png'
+                    size_hint: None, None
+                    size: root.height * 0.085, root.height * 0.085
+                    pos_hint: {'center_y': 0.5}
+                    allow_stretch: True
+                    keep_ratio: True
 
-            # ⏸ ปุ่มหยุด
+                Image:
+                    id: life_3
+                    source: 'assets/images/heart_full.png'
+                    size_hint: None, None
+                    size: root.height * 0.085, root.height * 0.085
+                    pos_hint: {'center_y': 0.5}
+                    allow_stretch: True
+                    keep_ratio: True
+
+            # --- กลุ่มที่ 2: ปุ่มหยุด (โค้ดเดิมของคุณเป๊ะๆ) ---
             Button:
                 text: "II"
                 size_hint: None, None
                 size: root.height * 0.07, root.height * 0.07
+                pos_hint: {'center_y': 0.5}
 
                 background_normal: ''
                 background_down: ''
-                background_color: 0,0,0,0
-                color: 1,1,1,1
+                background_color: 0, 0, 0, 0
+                color: 1, 1, 1, 1
                 bold: True
                 font_size: self.height * 0.45
 
@@ -191,7 +206,7 @@
                         radius: [10]
 
                     Color:
-                        rgba: 1,1,1,0.7
+                        rgba: 1, 1, 1, 0.7
                     Line:
                         rounded_rectangle: (self.x, self.y, self.width, self.height, 10)
                         width: 1.2
