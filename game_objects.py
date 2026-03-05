@@ -5,14 +5,22 @@ from kivy.core.window import Window
 from kivy.graphics import PushMatrix, PopMatrix, Rotate
 
 class FallingItem(Image):
-    def __init__(self, difficulty=1.0, is_bomb=False, **kwargs):
+    # 👇 เปลี่ยนมารับค่า item_type แทน is_bomb
+    def __init__(self, difficulty=1.0, item_type='normal', **kwargs):
         super().__init__(**kwargs)
         
-        self.is_bomb = is_bomb
-        if self.is_bomb:
+        self.item_type = item_type
+        self.is_bomb = (self.item_type == 'bomb')
+        
+        # 👇 เช็กประเภทเพื่อดึงรูปให้ถูกต้อง
+        if self.item_type == 'bomb':
             self.source = 'assets/images/bombb.png'
+        elif self.item_type == 'ice':
+            self.source = 'assets/images/ice.png'
+        elif self.item_type == 'chili':
+            self.source = 'assets/images/chili.png'
         else:
-            self.source = choice(['assets/images/ood.png', 'assets/images/vegtb.png', 'assets/images/meat.png', 'assets/images/tomato.png' ])
+            self.source = choice(['assets/images/ood.png', 'assets/images/vegtb.png', 'assets/images/meat.png', 'assets/images/tomato.png'])
             
         self.size_hint = (None, None)
         base_size = Window.height * 0.15
@@ -58,9 +66,10 @@ class FallingItem(Image):
         self.rot.origin = self.center
         self.rot.angle = self.angle
 
-    def update(self):
-        self.x += self.velocity_x
-        self.y += self.velocity_y
-        self.velocity_y -= self.gravity
-        self.angle += self.rotation_speed
+    # 👇 เพิ่ม time_scale=1.0 เพื่อรองรับระบบ Slow-motion ของน้ำแข็ง
+    def update(self, time_scale=1.0):
+        self.x += self.velocity_x * time_scale
+        self.y += self.velocity_y * time_scale
+        self.velocity_y -= self.gravity * time_scale
+        self.angle += self.rotation_speed * time_scale
         self.update_canvas()
