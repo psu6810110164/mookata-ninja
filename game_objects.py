@@ -2,7 +2,7 @@ from math import sqrt
 from random import randint, choice
 from kivy.uix.image import Image
 from kivy.core.window import Window
-from kivy.graphics import PushMatrix, PopMatrix, Rotate, Scale
+from kivy.graphics import Color, Ellipse, PushMatrix, PopMatrix, Rotate, Scale
 from kivy.animation import Animation
 from kivy.clock import Clock
 
@@ -50,9 +50,18 @@ class FallingItem(Image):
             self.velocity_x = randint(int(-x_force), int(-x_force * 0.5))
             
         self.angle = 0
-        self.rotation_speed = randint(-3, 3) * speed_multiplier
+        
+        if self.item_type == 'chili':
+            self.rotation_speed = randint(6, 12) * speed_multiplier * choice([-1, 1])
+        else:
+            self.rotation_speed = randint(-3, 3) * speed_multiplier
         
         with self.canvas.before:
+            if self.item_type == 'chili':
+                Color(1, 0.5, 0, 0.5)
+                glow_size = (self.width * 1.3, self.height * 1.3)
+                self.glow = Ellipse(size=glow_size)
+            
             PushMatrix()
             self.rot = Rotate()
             self.rot.origin = self.center
@@ -65,15 +74,18 @@ class FallingItem(Image):
         self.bind(pos=self.update_canvas, size=self.update_canvas)
 
         if self.item_type == 'chili':
-            Clock.schedule_once(self.start_chili_effect, 0.1)
+            Clock.schedule_once(self.start_chili_effects, 0.1)
 
-    def start_chili_effect(self, dt):
-        anim = Animation(x=1.3, y=1.3, duration=0.15, t='out_quad') + \
-               Animation(x=1.0, y=1.0, duration=0.15, t='in_quad')
-        anim.repeat = True
-        anim.start(self.scale)
+    def start_chili_effects(self, dt):
+        pulse_anim = Animation(x=1.3, y=1.3, duration=0.15, t='out_quad') + \
+                     Animation(x=1.0, y=1.0, duration=0.15, t='in_quad')
+        pulse_anim.repeat = True
+        pulse_anim.start(self.scale)
 
     def update_canvas(self, *args):
+        if hasattr(self, 'glow'):
+            self.glow.pos = (self.center_x - self.glow.size[0]/2, self.center_y - self.glow.size[1]/2)
+            
         self.rot.origin = self.center
         self.rot.angle = self.angle
         self.scale.origin = self.center
