@@ -82,7 +82,22 @@ class MainMenuScreen(Screen):
     pass
 
 class SettingsScreen(Screen):
-    pass
+
+    def on_volume_change(self, current_volume):
+        safe_volume = max(0, min(1, current_volume))
+        print(f"Volume is now: {safe_volume}")
+        app = App.get_running_app()
+        if hasattr(app, 'audio_manager'):
+            app.audio_manager.set_volume(safe_volume)
+        
+    def on_mute_change(self, is_muted):
+        app = App.get_running_app()
+        if hasattr(app, 'audio_manager'):
+            app.audio_manager.set_mute(is_muted)
+        if is_muted:
+            print("Mute ON")
+        else:
+            print("Mute OFF")
 
 class GameScreen(Screen):
     game_objects = []
@@ -94,10 +109,14 @@ class GameScreen(Screen):
 
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
+        self.audio = None
         # AudioManager is created lazily in on_enter to avoid
         # audio backend initialization/order issues.
 
     def on_enter(self):
+        app = App.get_running_app()
+        if hasattr(app, 'audio_manager'):
+            self.audio = app.audio_manager
         self.game_objects = []
         self.time_elapsed = 0
         self.score = 0
@@ -450,6 +469,8 @@ class GameOverScreen(Screen):
 
 class WindowManager(ScreenManager): pass
 class MookataNinjaApp(App):
-    def build(self): return WindowManager()
+    def build(self): 
+        self.audio_manager = AudioManager()
+        return WindowManager()
 
 if __name__ == '__main__': MookataNinjaApp().run()
