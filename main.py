@@ -307,8 +307,10 @@ class GameScreen(Screen):
                 else:
                     if hasattr(self, 'audio') and hasattr(self.audio, 'play_slash'):
                         self.audio.play_slash()
-                        
-                    if getattr(item, 'is_frenzy_bonus', False):
+                    
+                    is_in_frenzy = getattr(item, 'is_frenzy_bonus', False) or getattr(self, 'is_frenzy', False)
+                    
+                    if is_in_frenzy:
                         self.score += 10
                     else:
                         if current_time - self.last_hit_time < 1.0: self.combo_count += 1
@@ -318,7 +320,7 @@ class GameScreen(Screen):
 
                     self.ids.current_score_label.text = f"Score: {self.score}"
 
-                    if self.combo_count > 1 and not getattr(item, 'is_frenzy_bonus', False): 
+                    if self.combo_count > 1 and not is_in_frenzy: 
                         self.show_combo_text(touch.x, touch.y)
                         
                     self.create_slice_effect(item, slash_angle)
