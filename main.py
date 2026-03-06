@@ -194,13 +194,21 @@ class GameScreen(Screen):
         if difficulty_level > 3: spawn_count = randint(2, 4)
         if difficulty_level > 5: spawn_count = randint(3, 6)
         
+        active_bombs = sum(1 for item in self.game_objects if getattr(item, 'item_type', '') == 'bomb')
+        time_since_last_bomb = self.time_elapsed - getattr(self, 'last_bomb_time', -10.0)
+        bomb_spawned_this_wave = False
+
         for _ in range(spawn_count):
             item_type = 'normal'
 
             if difficulty_level > 0.5 and not getattr(self, 'bomb_protected', False):
                 rand_val = random()
+
                 if rand_val < 0.15: 
-                    item_type = 'bomb'
+                    if active_bombs < 2 and (time_since_last_bomb > 2.0 or bomb_spawned_this_wave):
+                        item_type = 'bomb'
+                        bomb_spawned_this_wave = True # จดไว้ว่ารอบนี้มีระเบิดออกแล้วนะ
+                        active_bombs += 1
                 elif rand_val < 0.20:
                     item_type = 'chili'
                 elif rand_val < 0.30 and len(self.game_objects) >= 3:
@@ -211,6 +219,9 @@ class GameScreen(Screen):
             insert_idx = len(self.children) - 1 if len(self.children) > 0 else 0
             self.add_widget(item, index=insert_idx)
             self.game_objects.append(item)
+
+        if bomb_spawned_this_wave:
+            self.last_bomb_time = self.time_elapsed
             
         base_delay = max(0.8, 2.5 - (self.time_elapsed * 0.05))
         next_spawn_delay = base_delay + (randint(-3, 3) * 0.1)
