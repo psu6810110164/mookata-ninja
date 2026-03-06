@@ -11,7 +11,7 @@ from kivy.clock import Clock
 from game_objects import FallingItem
 from kivy.animation import Animation
 from kivy.uix.image import Image
-
+from math import sqrt
 import random as rnd
 from audio_manager import AudioManager
 
@@ -188,11 +188,14 @@ class GameScreen(Screen):
             Clock.schedule_once(self.spawn_next_item, 0.1)
             return
             
-        difficulty_level = self.time_elapsed / 10.0
+        score = getattr(self, 'score', 0)
+        raw_difficulty = 0.5 + (sqrt(score) / 8.0)
+        difficulty_level = min(8.0, raw_difficulty)
+    
         spawn_count = 1
-        if difficulty_level > 1: spawn_count = randint(1, 2)
-        if difficulty_level > 3: spawn_count = randint(2, 4)
-        if difficulty_level > 5: spawn_count = randint(3, 6)
+        if difficulty_level > 1.5: spawn_count = randint(1, 2)
+        if difficulty_level > 3.0: spawn_count = randint(2, 4)
+        if difficulty_level > 5.0: spawn_count = randint(3, 5)
         
         active_bombs = sum(1 for item in self.game_objects if getattr(item, 'item_type', '') == 'bomb')
         time_since_last_bomb = self.time_elapsed - getattr(self, 'last_bomb_time', -10.0)
@@ -241,8 +244,8 @@ class GameScreen(Screen):
         if special_spawned_this_wave:
             self.last_special_time = self.time_elapsed
             
-        base_delay = max(0.8, 2.5 - (self.time_elapsed * 0.05))
-        next_spawn_delay = base_delay + (randint(-3, 3) * 0.1)
+        base_delay = max(0.8, 1.8 - (difficulty_level * 0.15))
+        next_spawn_delay = base_delay + (randint(-2, 2) * 0.1)
         Clock.schedule_once(self.spawn_next_item, next_spawn_delay)
 
     def game_loop(self, dt):
