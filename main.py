@@ -503,7 +503,7 @@ class GameScreen(Screen):
         self.bomb_protected = True
         
         Clock.unschedule(self.stop_frenzy)
-        Clock.schedule_interval(self.spawn_frenzy_item, 0.1) 
+        Clock.schedule_interval(self.spawn_frenzy_item, 0.15) 
         Clock.schedule_once(self.stop_frenzy, 2.0) 
 
     def stop_frenzy(self, dt):
