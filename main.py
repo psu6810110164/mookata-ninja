@@ -197,6 +197,8 @@ class GameScreen(Screen):
         active_bombs = sum(1 for item in self.game_objects if getattr(item, 'item_type', '') == 'bomb')
         time_since_last_bomb = self.time_elapsed - getattr(self, 'last_bomb_time', -10.0)
         bomb_spawned_this_wave = False
+        has_special_item = any(getattr(item, 'item_type', '') in ['chili', 'ice'] for item in self.game_objects)
+        special_spawned_this_wave = False
 
         for _ in range(spawn_count):
             item_type = 'normal'
@@ -209,11 +211,16 @@ class GameScreen(Screen):
                         item_type = 'bomb'
                         bomb_spawned_this_wave = True # จดไว้ว่ารอบนี้มีระเบิดออกแล้วนะ
                         active_bombs += 1
+                
                 elif rand_val < 0.20:
-                    item_type = 'chili'
+                    if not has_special_item and not special_spawned_this_wave:
+                        item_type = 'chili'
+                        special_spawned_this_wave = True
+                
                 elif rand_val < 0.30 and len(self.game_objects) >= 3:
-                    item_type = 'ice'
-
+                    if not has_special_item and not special_spawned_this_wave:
+                        item_type = 'ice'
+                        special_spawned_this_wave = True
                     
             item = FallingItem(difficulty=difficulty_level, item_type=item_type)
             insert_idx = len(self.children) - 1 if len(self.children) > 0 else 0
