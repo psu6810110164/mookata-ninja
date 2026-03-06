@@ -206,18 +206,22 @@ class GameScreen(Screen):
             if difficulty_level > 0.5 and not getattr(self, 'bomb_protected', False):
                 rand_val = random()
 
-                if rand_val < 0.15: 
+                base_bomb = 0.15
+                chili_chance = min(0.05, 0.01 + (difficulty_level * 0.005))
+                ice_chance = min(0.10, 0.02 + (difficulty_level * 0.01))
+
+                if rand_val < base_bomb: 
                     if active_bombs < 2 and (time_since_last_bomb > 2.0 or bomb_spawned_this_wave):
                         item_type = 'bomb'
-                        bomb_spawned_this_wave = True # จดไว้ว่ารอบนี้มีระเบิดออกแล้วนะ
+                        bomb_spawned_this_wave = True
                         active_bombs += 1
                 
-                elif rand_val < 0.20:
+                elif rand_val < (base_bomb + chili_chance):
                     if not has_special_item and not special_spawned_this_wave:
                         item_type = 'chili'
                         special_spawned_this_wave = True
                 
-                elif rand_val < 0.30 and len(self.game_objects) >= 3:
+                elif rand_val < (base_bomb + chili_chance + ice_chance) and len(self.game_objects) >= 3:
                     if not has_special_item and not special_spawned_this_wave:
                         item_type = 'ice'
                         special_spawned_this_wave = True
