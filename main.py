@@ -197,7 +197,7 @@ class GameScreen(Screen):
         for _ in range(spawn_count):
             item_type = 'normal'
 
-            if difficulty_level > 0.5:
+            if difficulty_level > 0.5 and not getattr(self, 'bomb_protected', False):
                 rand_val = random()
                 if rand_val < 0.15: 
                     item_type = 'bomb'
@@ -488,12 +488,21 @@ class GameScreen(Screen):
         self.time_scale = 1.0  # คืนค่าเวลาให้ปกติ
 
     def trigger_frenzy(self):
+        self.is_frenzy = True 
+        self.bomb_protected = True
+        
         Clock.unschedule(self.stop_frenzy)
-        Clock.schedule_interval(self.spawn_frenzy_item, 0.1) # เสกของทุกๆ 0.1 วินาที!
-        Clock.schedule_once(self.stop_frenzy, 2.0) # พุ่งรัวๆ นาน 2 วินาที
+        Clock.schedule_interval(self.spawn_frenzy_item, 0.1) 
+        Clock.schedule_once(self.stop_frenzy, 2.0) 
 
     def stop_frenzy(self, dt):
+        self.is_frenzy = False
         Clock.unschedule(self.spawn_frenzy_item)
+        
+        Clock.schedule_once(self.remove_bomb_protection, 2.0)
+
+    def remove_bomb_protection(self, dt):
+        self.bomb_protected = False
 
     def spawn_frenzy_item(self, dt):
         if self.is_paused: return
