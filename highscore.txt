@@ -12,3 +12,5 @@ Unknown Ninja: 240
 Unknown Ninja: 2140
 Unknown Ninja: 630
 Unknown Ninja: 6380
+Unknown Ninja: 80
+Unknown Ninja: 1250

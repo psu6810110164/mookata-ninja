@@ -127,6 +127,12 @@ class GameScreen(Screen):
         self.combo_count = 0
         self.last_hit_time = 0
         self.temp_hp = 3
+        self.last_bomb_time = -10.0
+        self.last_special_time = -15.0
+        self.bomb_protected = False
+        self.special_on_cooldown = False
+        self.is_frenzy = False
+        self.time_scale = 1.0
         self.ids.combo_shadow.text = ""
         self.ids.combo_main.text = ""
         self.ids.combo_highlight.text = ""
@@ -153,6 +159,12 @@ class GameScreen(Screen):
             self.audio.stop_bgm()
         Clock.unschedule(self.game_loop)
         Clock.unschedule(self.spawn_next_item)
+        Clock.unschedule(self.reset_special_cooldown)
+        Clock.unschedule(self.stop_frenzy)
+        Clock.unschedule(self.remove_bomb_protection)
+        Clock.unschedule(self.spawn_frenzy_item)
+        Clock.unschedule(self.reset_slowmo)
+
         for obj in self.game_objects:
             self.remove_widget(obj)
         self.game_objects.clear()
@@ -543,6 +555,9 @@ class GameScreen(Screen):
 
     def remove_bomb_protection(self, dt):
         self.bomb_protected = False
+
+    def reset_special_cooldown(self, dt):
+        self.special_on_cooldown = False
 
     def spawn_frenzy_item(self, dt):
         if self.is_paused: return
