@@ -196,6 +196,8 @@ class GameScreen(Screen):
         
         active_bombs = sum(1 for item in self.game_objects if getattr(item, 'item_type', '') == 'bomb')
         time_since_last_bomb = self.time_elapsed - getattr(self, 'last_bomb_time', -10.0)
+        time_since_last_special = self.time_elapsed - getattr(self, 'last_special_time', -10.0)
+        
         bomb_spawned_this_wave = False
         has_special_item = any(getattr(item, 'item_type', '') in ['chili', 'ice'] for item in self.game_objects)
         special_spawned_this_wave = False
@@ -210,6 +212,8 @@ class GameScreen(Screen):
                 chili_chance = min(0.05, 0.01 + (difficulty_level * 0.005))
                 ice_chance = min(0.10, 0.02 + (difficulty_level * 0.01))
 
+                can_spawn_special = (time_since_last_special > 10.0) and not has_special_item and not special_spawned_this_wave
+
                 if rand_val < base_bomb: 
                     if active_bombs < 2 and (time_since_last_bomb > 2.0 or bomb_spawned_this_wave):
                         item_type = 'bomb'
@@ -217,12 +221,12 @@ class GameScreen(Screen):
                         active_bombs += 1
                 
                 elif rand_val < (base_bomb + chili_chance):
-                    if not has_special_item and not special_spawned_this_wave:
+                    if can_spawn_special:
                         item_type = 'chili'
                         special_spawned_this_wave = True
                 
                 elif rand_val < (base_bomb + chili_chance + ice_chance) and len(self.game_objects) >= 3:
-                    if not has_special_item and not special_spawned_this_wave:
+                    if can_spawn_special:
                         item_type = 'ice'
                         special_spawned_this_wave = True
                     
@@ -233,6 +237,9 @@ class GameScreen(Screen):
 
         if bomb_spawned_this_wave:
             self.last_bomb_time = self.time_elapsed
+
+        if special_spawned_this_wave:
+            self.last_special_time = self.time_elapsed
             
         base_delay = max(0.8, 2.5 - (self.time_elapsed * 0.05))
         next_spawn_delay = base_delay + (randint(-3, 3) * 0.1)
