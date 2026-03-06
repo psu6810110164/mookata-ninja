@@ -129,6 +129,23 @@
             allow_stretch: True
             keep_ratio: False
 
+        # --- Frenzy Mode Border ---
+        Widget:
+            id: frenzy_border
+            opacity: 0
+            size_hint: 1, 1
+            canvas.before:
+                Color:
+                    rgba: 1, 0.2, 0, 0.6
+                Line:
+                    width: 10
+                    rectangle: (0, 0, self.width, self.height)
+                Color:
+                    rgba: 1, 0.5, 0, 0.3
+                Line:
+                    width: 25
+                    rectangle: (0, 0, self.width, self.height)
+
         # UI คะแนน
         Label:
             id: current_score_label
@@ -242,19 +259,6 @@
             color: 0.8, 0.95, 1, 1
             pos: (-1000, -1000)
 
-        # Layer สำหรับข้อความ Combo (จัดวางตามโค้ด Python)
-        Label:
-            id: combo_shadow
-            font_size: '60sp'
-            bold: True
-        Label:
-            id: combo_main
-            font_size: '60sp'
-            bold: True
-        Label:
-            id: combo_highlight
-            font_size: '60sp'
-            bold: True
 
     # หน้าต่างเมนู Pause (Modern Version)
         BoxLayout:

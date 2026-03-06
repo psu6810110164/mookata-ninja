@@ -543,12 +543,26 @@ class GameScreen(Screen):
         self.is_frenzy = True 
         self.bomb_protected = True
         
+        if 'frenzy_border' in self.ids:
+            border = self.ids.frenzy_border
+            # เริ่มการกระพริบ (Pulsing)
+            anim = Animation(opacity=1, duration=0.2) + \
+                   (Animation(opacity=0.3, duration=0.3) + Animation(opacity=1, duration=0.3))
+            anim.repeat = True
+            anim.start(border)
+
         Clock.unschedule(self.stop_frenzy)
         Clock.schedule_interval(self.spawn_frenzy_item, 0.15) 
         Clock.schedule_once(self.stop_frenzy, 2.0) 
 
     def stop_frenzy(self, dt):
         self.is_frenzy = False
+        
+        if 'frenzy_border' in self.ids:
+            border = self.ids.frenzy_border
+            Animation.stop_all(border)
+            Animation(opacity=0, duration=0.5).start(border)
+
         Clock.unschedule(self.spawn_frenzy_item)
         
         Clock.schedule_once(self.remove_bomb_protection, 2.0)
