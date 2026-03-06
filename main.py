@@ -11,7 +11,7 @@ from kivy.clock import Clock
 from game_objects import FallingItem
 from kivy.animation import Animation
 from kivy.uix.image import Image
-
+from math import sqrt
 import random as rnd
 from audio_manager import AudioManager
 
@@ -127,6 +127,12 @@ class GameScreen(Screen):
         self.combo_count = 0
         self.last_hit_time = 0
         self.temp_hp = 3
+        self.last_bomb_time = -10.0
+        self.last_special_time = -15.0
+        self.bomb_protected = False
+        self.special_on_cooldown = False
+        self.is_frenzy = False
+        self.time_scale = 1.0
         self.ids.combo_shadow.text = ""
         self.ids.combo_main.text = ""
         self.ids.combo_highlight.text = ""
@@ -153,6 +159,12 @@ class GameScreen(Screen):
             self.audio.stop_bgm()
         Clock.unschedule(self.game_loop)
         Clock.unschedule(self.spawn_next_item)
+        Clock.unschedule(self.reset_special_cooldown)
+        Clock.unschedule(self.stop_frenzy)
+        Clock.unschedule(self.remove_bomb_protection)
+        Clock.unschedule(self.spawn_frenzy_item)
+        Clock.unschedule(self.reset_slowmo)
+
         for obj in self.game_objects:
             self.remove_widget(obj)
         self.game_objects.clear()
@@ -188,31 +200,64 @@ class GameScreen(Screen):
             Clock.schedule_once(self.spawn_next_item, 0.1)
             return
             
-        difficulty_level = self.time_elapsed / 10.0
+        score = getattr(self, 'score', 0)
+        raw_difficulty = 0.5 + (sqrt(score) / 8.0)
+        difficulty_level = min(8.0, raw_difficulty)
+    
         spawn_count = 1
-        if difficulty_level > 1: spawn_count = randint(1, 2)
-        if difficulty_level > 3: spawn_count = randint(2, 4)
-        if difficulty_level > 5: spawn_count = randint(3, 6)
+        if difficulty_level > 1.5: spawn_count = randint(1, 2)
+        if difficulty_level > 3.0: spawn_count = randint(2, 4)
+        if difficulty_level > 5.0: spawn_count = randint(3, 5)
         
+        active_bombs = sum(1 for item in self.game_objects if getattr(item, 'item_type', '') == 'bomb')
+        time_since_last_bomb = self.time_elapsed - getattr(self, 'last_bomb_time', -10.0)
+        time_since_last_special = self.time_elapsed - getattr(self, 'last_special_time', -10.0)
+        
+        bomb_spawned_this_wave = False
+        has_special_item = any(getattr(item, 'item_type', '') in ['chili', 'ice'] for item in self.game_objects)
+        special_spawned_this_wave = False
+
         for _ in range(spawn_count):
             item_type = 'normal'
-            # 👇 สุ่มโอกาสเกิดไอเทมพิเศษ
-            if difficulty_level > 0.5:
+
+            if difficulty_level > 0.5 and not getattr(self, 'bomb_protected', False):
                 rand_val = random()
-                if rand_val < 0.10: 
-                    item_type = 'bomb'
-                elif rand_val < 0.15: # โอกาส 5%
-                    item_type = 'ice'
-                elif rand_val < 0.20: # โอกาส 5%
-                    item_type = 'chili'
+
+                base_bomb = 0.15
+                chili_chance = min(0.05, 0.01 + (difficulty_level * 0.005))
+                ice_chance = min(0.10, 0.02 + (difficulty_level * 0.01))
+
+                can_spawn_special = (time_since_last_special > 10.0) and not has_special_item and not special_spawned_this_wave
+
+                if rand_val < base_bomb: 
+                    if active_bombs < 2 and (time_since_last_bomb > 2.0 or bomb_spawned_this_wave):
+                        item_type = 'bomb'
+                        bomb_spawned_this_wave = True
+                        active_bombs += 1
+                
+                elif rand_val < (base_bomb + chili_chance):
+                    if can_spawn_special:
+                        item_type = 'chili'
+                        special_spawned_this_wave = True
+                
+                elif rand_val < (base_bomb + chili_chance + ice_chance) and len(self.game_objects) >= 3:
+                    if can_spawn_special:
+                        item_type = 'ice'
+                        special_spawned_this_wave = True
                     
             item = FallingItem(difficulty=difficulty_level, item_type=item_type)
             insert_idx = len(self.children) - 1 if len(self.children) > 0 else 0
             self.add_widget(item, index=insert_idx)
             self.game_objects.append(item)
+
+        if bomb_spawned_this_wave:
+            self.last_bomb_time = self.time_elapsed
+
+        if special_spawned_this_wave:
+            self.last_special_time = self.time_elapsed
             
-        base_delay = max(0.8, 2.5 - (self.time_elapsed * 0.05))
-        next_spawn_delay = base_delay + (randint(-3, 3) * 0.1)
+        base_delay = max(0.8, 1.8 - (difficulty_level * 0.15))
+        next_spawn_delay = base_delay + (randint(-2, 2) * 0.1)
         Clock.schedule_once(self.spawn_next_item, next_spawn_delay)
 
     def game_loop(self, dt):
@@ -274,14 +319,22 @@ class GameScreen(Screen):
                 else:
                     if hasattr(self, 'audio') and hasattr(self.audio, 'play_slash'):
                         self.audio.play_slash()
-                    if current_time - self.last_hit_time < 1.0: self.combo_count += 1
-                    else: self.combo_count = 1
-                    self.last_hit_time = current_time
-                    self.score += 10 * self.combo_count
+                    
+                    is_in_frenzy = getattr(item, 'is_frenzy_bonus', False) or getattr(self, 'is_frenzy', False)
+                    
+                    if is_in_frenzy:
+                        self.score += 10
+                    else:
+                        if current_time - self.last_hit_time < 1.0: self.combo_count += 1
+                        else: self.combo_count = 1
+                        self.last_hit_time = current_time
+                        self.score += 10 * self.combo_count
 
                     self.ids.current_score_label.text = f"Score: {self.score}"
 
-                    if self.combo_count > 1: self.show_combo_text(touch.x, touch.y)
+                    if self.combo_count > 1 and not is_in_frenzy: 
+                        self.show_combo_text(touch.x, touch.y)
+                        
                     self.create_slice_effect(item, slash_angle)
                     self.create_hit_effect(touch.x, touch.y)
                     self.remove_widget(item)
@@ -487,17 +540,31 @@ class GameScreen(Screen):
         self.time_scale = 1.0  # คืนค่าเวลาให้ปกติ
 
     def trigger_frenzy(self):
+        self.is_frenzy = True 
+        self.bomb_protected = True
+        
         Clock.unschedule(self.stop_frenzy)
-        Clock.schedule_interval(self.spawn_frenzy_item, 0.1) # เสกของทุกๆ 0.1 วินาที!
-        Clock.schedule_once(self.stop_frenzy, 2.0) # พุ่งรัวๆ นาน 2 วินาที
+        Clock.schedule_interval(self.spawn_frenzy_item, 0.15) 
+        Clock.schedule_once(self.stop_frenzy, 2.0) 
 
     def stop_frenzy(self, dt):
+        self.is_frenzy = False
         Clock.unschedule(self.spawn_frenzy_item)
+        
+        Clock.schedule_once(self.remove_bomb_protection, 2.0)
+
+    def remove_bomb_protection(self, dt):
+        self.bomb_protected = False
+
+    def reset_special_cooldown(self, dt):
+        self.special_on_cooldown = False
 
     def spawn_frenzy_item(self, dt):
         if self.is_paused: return
         item = FallingItem(difficulty=3.0, item_type='normal')
         
+        item.is_frenzy_bonus = True
+
         item.y = -50
         item.x = randint(100, Window.width - 100)
         

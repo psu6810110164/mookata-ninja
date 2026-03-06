@@ -33,14 +33,20 @@ class FallingItem(Image):
         screen_w = Window.width
         self.x = randint(int(screen_w * 0.1), int(screen_w * 0.9))
         self.y = -self.height
-        
-        target_height = Window.height * (randint(60, 85) / 100.0)
+
+        if self.is_bomb:
+            target_height = Window.height * (randint(60, 75) / 100.0)
+        else:
+            target_height = Window.height * (randint(60, 85) / 100.0)
+            
         distance_to_travel = target_height - self.y
-        
+
         speed_multiplier = 1.0 + (difficulty * 0.05)
         
-        self.gravity = (Window.height * 0.0005) * speed_multiplier
+        if self.is_bomb:
+            speed_multiplier *= 0.7
         
+        self.gravity = (Window.height * 0.0005) * speed_multiplier
         self.velocity_y = sqrt(2 * self.gravity * distance_to_travel)
         
         x_force = Window.width * 0.005 * speed_multiplier
