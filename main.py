@@ -196,15 +196,16 @@ class GameScreen(Screen):
         
         for _ in range(spawn_count):
             item_type = 'normal'
-            # 👇 สุ่มโอกาสเกิดไอเทมพิเศษ
+
             if difficulty_level > 0.5:
                 rand_val = random()
-                if rand_val < 0.10: 
+                if rand_val < 0.15: 
                     item_type = 'bomb'
-                elif rand_val < 0.15: # โอกาส 5%
-                    item_type = 'ice'
-                elif rand_val < 0.20: # โอกาส 5%
+                elif rand_val < 0.20:
                     item_type = 'chili'
+                elif rand_val < 0.30 and len(self.game_objects) >= 3:
+                    item_type = 'ice'
+
                     
             item = FallingItem(difficulty=difficulty_level, item_type=item_type)
             insert_idx = len(self.children) - 1 if len(self.children) > 0 else 0
