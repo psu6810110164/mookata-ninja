@@ -307,14 +307,20 @@ class GameScreen(Screen):
                 else:
                     if hasattr(self, 'audio') and hasattr(self.audio, 'play_slash'):
                         self.audio.play_slash()
-                    if current_time - self.last_hit_time < 1.0: self.combo_count += 1
-                    else: self.combo_count = 1
-                    self.last_hit_time = current_time
-                    self.score += 10 * self.combo_count
+                        
+                    if getattr(item, 'is_frenzy_bonus', False):
+                        self.score += 10
+                    else:
+                        if current_time - self.last_hit_time < 1.0: self.combo_count += 1
+                        else: self.combo_count = 1
+                        self.last_hit_time = current_time
+                        self.score += 10 * self.combo_count
 
                     self.ids.current_score_label.text = f"Score: {self.score}"
 
-                    if self.combo_count > 1: self.show_combo_text(touch.x, touch.y)
+                    if self.combo_count > 1 and not getattr(item, 'is_frenzy_bonus', False): 
+                        self.show_combo_text(touch.x, touch.y)
+                        
                     self.create_slice_effect(item, slash_angle)
                     self.create_hit_effect(touch.x, touch.y)
                     self.remove_widget(item)
@@ -540,6 +546,8 @@ class GameScreen(Screen):
         if self.is_paused: return
         item = FallingItem(difficulty=3.0, item_type='normal')
         
+        item.is_frenzy_bonus = True
+
         item.y = -50
         item.x = randint(100, Window.width - 100)
         
