@@ -228,6 +228,7 @@ class GameScreen(Screen):
                 ice_chance = min(0.10, 0.02 + (difficulty_level * 0.01))
 
                 can_spawn_special = (time_since_last_special > 10.0) and not has_special_item and not special_spawned_this_wave
+                golden_chance = 0.04 # โอกาส 4%
 
                 if rand_val < base_bomb: 
                     if active_bombs < 2 and (time_since_last_bomb > 2.0 or bomb_spawned_this_wave):
@@ -244,6 +245,9 @@ class GameScreen(Screen):
                     if can_spawn_special:
                         item_type = 'ice'
                         special_spawned_this_wave = True
+                
+                elif rand_val > (1.0 - golden_chance):
+                    item_type = 'golden_meat'
                     
             item = FallingItem(difficulty=difficulty_level, item_type=item_type)
             insert_idx = len(self.children) - 1 if len(self.children) > 0 else 0
@@ -314,6 +318,22 @@ class GameScreen(Screen):
                         self.audio.play_slash()
                     self.trigger_frenzy()
                     self.create_slice_effect(item, slash_angle)
+                    self.remove_widget(item)
+                    self.game_objects.remove(item)
+                elif item.item_type == 'golden_meat':
+                    # ฟันโดนหมูทอง -> เพิ่มหัวใจ
+                    if hasattr(self, 'audio') and hasattr(self.audio, 'play_slash'):
+                        self.audio.play_slash()
+                    
+                    if self.temp_hp < 3:
+                        self.temp_hp += 1
+                        self.update_lives(self.temp_hp)
+                        
+                    self.score += 50 # ให้คะแนนเยอะเป็นพิเศษ
+                    self.ids.current_score_label.text = f"Score: {self.score}"
+                    
+                    self.create_slice_effect(item, slash_angle)
+                    self.create_hit_effect(touch.x, touch.y) # ใช้เอฟเฟกต์แสงกระจาย
                     self.remove_widget(item)
                     self.game_objects.remove(item)
                 else:
