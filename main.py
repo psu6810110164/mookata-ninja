@@ -79,7 +79,10 @@ class SlicedHalf(Image):
             self.parent.remove_widget(self)
 
 class MainMenuScreen(Screen):
-    pass
+    def on_enter(self):
+        app = App.get_running_app()
+        if hasattr(app, 'audio_manager'):
+            app.audio_manager.play_bgm()
 
 class SettingsScreen(Screen):
 
