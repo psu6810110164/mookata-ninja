@@ -269,8 +269,13 @@ class GameScreen(Screen):
         self.time_elapsed += dt
         
         for item in self.game_objects[:]:
-            item.update(self.time_scale) # 👇 ใส่ time_scale ตรงนี้
+            item.update(self.time_scale) 
             if item.y < -item.height * 2:
+                # ถ้าเป็นของกินหล่นพื้น (และไม่ใช่ช่วง Frenzy ที่ของเยอะเกินไป)
+                if item.item_type in ['normal', 'golden_meat'] and not self.is_frenzy:
+                    self.test_damage()
+                    self.trigger_screenshake(magnitude=3) # สั่นเบาๆ เมื่อพลาด
+                    
                 self.remove_widget(item)
                 self.game_objects.remove(item)
 
@@ -301,7 +306,7 @@ class GameScreen(Screen):
                     self.ids.combo_main.text = ""
                     self.ids.combo_highlight.text = ""
                     self.create_bomb_effect(touch.x, touch.y)
-                    self.trigger_screenshake()
+                    self.trigger_screenshake(magnitude=15) # ระเบิดสั่นแรงพิเศษ
                     self.remove_widget(item)
                     self.game_objects.remove(item)
                 elif item.item_type == 'ice':
@@ -360,8 +365,7 @@ class GameScreen(Screen):
                     self.remove_widget(item)
                     self.game_objects.remove(item)
 
-    def trigger_screenshake(self):
-        magnitude = 10
+    def trigger_screenshake(self, magnitude=10):
         duration = 0.04
 
         anim = Animation(x=rnd.uniform(-magnitude, magnitude), y=rnd.uniform(-magnitude, magnitude), duration=duration, t='linear') #
