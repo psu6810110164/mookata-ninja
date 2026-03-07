@@ -627,9 +627,10 @@ class GameScreen(Screen):
 
         if 'frenzy_border' in self.ids:
             border = self.ids.frenzy_border
-            # เริ่มการกระพริบ (Pulsing)
-            anim = Animation(opacity=1, duration=0.2) + \
-                   (Animation(opacity=0.3, duration=0.3) + Animation(opacity=1, duration=0.3))
+            # เคลียร์ Animation เก่าถ้ามี
+            Animation.stop_all(border)
+            # เริ่มการกระพริบที่รวดเร็วและชัดเจน (Pulse Intensity)
+            anim = Animation(opacity=1, duration=0.25) + Animation(opacity=0.2, duration=0.25)
             anim.repeat = True
             anim.start(border)
 
@@ -642,8 +643,11 @@ class GameScreen(Screen):
         
         if 'frenzy_border' in self.ids:
             border = self.ids.frenzy_border
+            # หยุดการกระพริบทันที
             Animation.stop_all(border)
-            Animation(opacity=0, duration=0.5).start(border)
+            # จางหายไปอย่างรวดเร็วเพื่อบอกว่า "จบโหมดแล้ว"
+            anim = Animation(opacity=0, duration=0.3)
+            anim.start(border)
 
         Clock.unschedule(self.spawn_frenzy_item)
         
