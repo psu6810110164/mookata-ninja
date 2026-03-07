@@ -15,6 +15,7 @@ from math import sqrt
 import random as rnd
 from audio_manager import AudioManager
 from kivy.uix.label import Label
+from kivy.metrics import sp
 
 Window.size = (800, 450)
 
@@ -25,18 +26,35 @@ class FloatingLabel(Label):
         super().__init__(**kwargs)
         self.text = text
         self.font_name = 'assets/fonts/Bangers.ttf'
-        self.font_size = '25sp'
+        self.font_size = sp(20) # ใช้ numeric value
         self.color = color
         self.bold = True
         self.center = pos
         self.outline_color = (0, 0, 0, 1)
-        self.outline_width = 1
+        self.outline_width = 2
         
-        # สร้าง Animation ให้ลอยขึ้นและจางหายไป
-        anim = Animation(y=self.y + 80, opacity=0, duration=0.8, t='out_quad')
+        # สุ่มการเอียงเล็กน้อย
+        import random
+        angle = random.uniform(-15, 15)
+        
+        with self.canvas.before:
+            PushMatrix()
+            self.rot = Rotate(angle=angle, origin=self.center)
+        with self.canvas.after:
+            PopMatrix()
+            
+        self.bind(pos=self.update_canvas, size=self.update_canvas)
+
+        # Animation: ขยายขนาด (Pop) และลอยขึ้นพร้อมจางหาย
+        anim = Animation(font_size=sp(40), duration=0.1, t='out_back') + \
+               Animation(y=self.y + 100, opacity=0, duration=0.7, t='out_quad')
+        
         anim.bind(on_complete=self.remove_self)
         anim.start(self)
         
+    def update_canvas(self, *args):
+        self.rot.origin = self.center
+
     def remove_self(self, anim, widget):
         if self.parent:
             self.parent.remove_widget(self)
@@ -293,11 +311,6 @@ class GameScreen(Screen):
         for item in self.game_objects[:]:
             item.update(self.time_scale) 
             if item.y < -item.height * 2:
-                # ถ้าเป็นของกินหล่นพื้น (และไม่ใช่ช่วง Frenzy ที่ของเยอะเกินไป)
-                if item.item_type in ['normal', 'golden_meat'] and not self.is_frenzy:
-                    self.test_damage()
-                    self.trigger_screenshake(magnitude=3) # สั่นเบาๆ เมื่อพลาด
-                    
                 self.remove_widget(item)
                 self.game_objects.remove(item)
 
