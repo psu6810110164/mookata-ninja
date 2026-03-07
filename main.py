@@ -14,10 +14,32 @@ from kivy.uix.image import Image
 from math import sqrt
 import random as rnd
 from audio_manager import AudioManager
+from kivy.uix.label import Label
 
 Window.size = (800, 450)
 
 Builder.load_file('mookata.kv')
+
+class FloatingLabel(Label):
+    def __init__(self, text, pos, color=(1, 1, 1, 1), **kwargs):
+        super().__init__(**kwargs)
+        self.text = text
+        self.font_name = 'assets/fonts/Bangers.ttf'
+        self.font_size = '25sp'
+        self.color = color
+        self.bold = True
+        self.center = pos
+        self.outline_color = (0, 0, 0, 1)
+        self.outline_width = 1
+        
+        # สร้าง Animation ให้ลอยขึ้นและจางหายไป
+        anim = Animation(y=self.y + 80, opacity=0, duration=0.8, t='out_quad')
+        anim.bind(on_complete=self.remove_self)
+        anim.start(self)
+        
+    def remove_self(self, anim, widget):
+        if self.parent:
+            self.parent.remove_widget(self)
 
 class SlicedHalf(Image):
     def __init__(self, orig_texture, is_left, orig_center, orig_size, slash_angle, **kwargs):
@@ -333,6 +355,9 @@ class GameScreen(Screen):
                     if self.temp_hp < 3:
                         self.temp_hp += 1
                         self.update_lives(self.temp_hp)
+                    
+                    # คะแนนลอยสำหรับหมูทอง (สีเหลืองทองโตๆ)
+                    self.show_floating_score("+50 ❤️", (item.center_x, item.center_y), color=(1, 0.9, 0, 1))
                         
                     self.score += 50 # ให้คะแนนเยอะเป็นพิเศษ
                     self.ids.current_score_label.text = f"Score: {self.score}"
@@ -348,12 +373,22 @@ class GameScreen(Screen):
                     is_in_frenzy = getattr(item, 'is_frenzy_bonus', False) or getattr(self, 'is_frenzy', False)
                     
                     if is_in_frenzy:
-                        self.score += 10
+                        points = 10
+                        self.score += points
+                        self.show_floating_score(f"+{points}", (item.center_x, item.center_y), color=(1, 0.3, 0.1, 1))
                     else:
                         if current_time - self.last_hit_time < 1.0: self.combo_count += 1
                         else: self.combo_count = 1
                         self.last_hit_time = current_time
-                        self.score += 10 * self.combo_count
+                        points = 10 * self.combo_count
+                        self.score += points
+                        
+                        # คะแนนลอยปกติ (ถ้ามีคอมโบให้สีเปลี่ยนไปตามความแรง)
+                        score_color = (1, 1, 1, 1)
+                        if self.combo_count >= 5: score_color = (1, 0.8, 0.2, 1) # ทอง
+                        elif self.combo_count >= 3: score_color = (0.2, 1, 0.3, 1) # เขียว
+                        
+                        self.show_floating_score(f"+{points}", (item.center_x, item.center_y), color=score_color)
 
                     self.ids.current_score_label.text = f"Score: {self.score}"
 
@@ -364,6 +399,10 @@ class GameScreen(Screen):
                     self.create_hit_effect(touch.x, touch.y)
                     self.remove_widget(item)
                     self.game_objects.remove(item)
+
+    def show_floating_score(self, text, pos, color=(1, 1, 1, 1)):
+        label = FloatingLabel(text=text, pos=pos, color=color)
+        self.add_widget(label)
 
     def trigger_screenshake(self, magnitude=10):
         duration = 0.04
