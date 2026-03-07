@@ -619,6 +619,12 @@ class GameScreen(Screen):
         self.is_frenzy = True 
         self.bomb_protected = True
         
+        # กวาดระเบิดที่ค้างอยู่บนจอออกให้หมดทันที!
+        for item in self.game_objects[:]:
+            if getattr(item, 'item_type', '') == 'bomb':
+                self.remove_widget(item)
+                self.game_objects.remove(item)
+
         if 'frenzy_border' in self.ids:
             border = self.ids.frenzy_border
             # เริ่มการกระพริบ (Pulsing)
