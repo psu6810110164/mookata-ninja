@@ -71,3 +71,9 @@ To run **Mookata Ninja**, ensure you have Python 3.11 or newer (Python 3.13 is f
    ```bash
    python main.py
    ```
+
+## Troubleshooting
+Common issues and their solutions:
+- **Kivy Import Error**: Ensure you are using Kivy 2.3.1 for Python 3.13.
+- **No Sound**: On Windows/Linux, you might need specific `sdl2` libraries.
+- **Window not opening**: Verify your graphics drivers support OpenGL 2.1+.
