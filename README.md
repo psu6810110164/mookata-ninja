@@ -13,7 +13,11 @@
 ## Overview
 **Mookata Ninja** is an action-packed arcade game inspired by the "Ninja Slash" genre, reimagined with a delicious Thai BBQ (Mookata) theme. Players must slice through flying ingredients to score points while avoiding hazardous bombs, all within the vibrant world of a sizzling grill.
 
-ในโปรเจกต์นี้ ได้ทำการพัฒนาระบบหลักๆ ของเกมดังนี้:
+## Gameplay Mechanics
+The core loop involves slicing ingredients as they are tossed onto the screen.
+- **Slicing**: Click and drag your mouse (or swipe on touchscreens) across ingredients.
+- **Avoid Bombs**: Slicing a bomb results in an immediate loss of a life.
+- **Save Ingredients**: Don't let precious food fall off the bottom of the screen!
 
 1. **ระบบตรวจสอบการชน (Collision Detection):** - ตรวจสอบพิกัดการลากเมาส์ (Touch) ว่าตัดผ่านวัตถุ (หมู, ผัก, ถ่าน) บนหน้าจอหรือไม่
    - หากฟันโดนของกิน จะได้คะแนนและเกิดเอฟเฟกต์เสียง (Slash)
