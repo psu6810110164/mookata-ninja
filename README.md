@@ -25,6 +25,12 @@ Different items provide different points and effects:
 - **Golden Meat**: Rare item that grants bonus points and visual effects.
 - **Bomb (Charcoal)**: To be avoided! Slicing these will cost you a life.
 
+## Power-ups & Effects
+Special items appear to change the gameplay dynamic:
+- **Chili**: Triggers a frenzy mode where ingredients appear faster.
+- **Ice**: Slows down the time, making it easier to slice items.
+- **Golden Meat**: Rare spawn that significantly boosts your high score.
+
 ## Controls & Input
 **Mookata Ninja** is designed for intuitive play across devices.
 - **Mouse**: Click and drag to create slicing streaks.
