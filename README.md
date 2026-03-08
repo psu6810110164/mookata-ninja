@@ -52,3 +52,22 @@ Special items appear to change the gameplay dynamic:
 4. **ระบบบันทึกคะแนนสูงสุด (Save Highscore):**
    - ในหน้า Game Over ผู้เล่นสามารถพิมพ์ชื่อเพื่อบันทึกคะแนนที่เล่นได้
    - ระบบจะเซฟชื่อและคะแนนลงในไฟล์ `highscore.txt` และดึงข้อมูลมาแสดงผลในรอบถัดไป
+
+## Installation
+To run **Mookata Ninja**, ensure you have Python 3.11 or newer (Python 3.13 is fully supported).
+
+1. **Clone the repository**:
+   ```bash
+   git clone <repository-url>
+   cd mookata-ninja
+   ```
+
+2. **Install Kivy and dependencies**:
+   ```bash
+   python -m pip install kivy==2.3.1 kivy_deps.sdl2 kivy_deps.glew
+   ```
+
+3. **Run the game**:
+   ```bash
+   python main.py
+   ```
