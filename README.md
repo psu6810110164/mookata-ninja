@@ -77,3 +77,10 @@ Common issues and their solutions:
 - **Kivy Import Error**: Ensure you are using Kivy 2.3.1 for Python 3.13.
 - **No Sound**: On Windows/Linux, you might need specific `sdl2` libraries.
 - **Window not opening**: Verify your graphics drivers support OpenGL 2.1+.
+
+## Project Structure
+- `main.py`: Entry point and screen management.
+- `game_objects.py`: Logic for falling items and effects.
+- `audio_manager.py`: Handling of bgm and sound effects.
+- `mookata.kv`: UI layout and styling definitions.
+- `assets/`: Directory containing images and audio files.
