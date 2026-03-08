@@ -35,7 +35,6 @@ class FloatingLabel(Label):
         self.outline_width = 2
         
         # สุ่มการเอียงเล็กน้อย
-        import random
         angle = random.uniform(-15, 15)
         
         with self.canvas.before:
@@ -249,9 +248,10 @@ class GameScreen(Screen):
         difficulty_level = min(8.0, raw_difficulty)
     
         spawn_count = 1
-        if difficulty_level > 1.5: spawn_count = randint(1, 2)
-        if difficulty_level > 3.0: spawn_count = randint(2, 4)
-        if difficulty_level > 5.0: spawn_count = randint(3, 5)
+        spawn_count = 1
+        if difficulty_level > 1.5: spawn_count = random.randint(1, 2)
+        if difficulty_level > 3.0: spawn_count = random.randint(2, 4)
+        if difficulty_level > 5.0: spawn_count = random.randint(3, 5)
         
         active_bombs = sum(1 for item in self.game_objects if getattr(item, 'item_type', '') == 'bomb')
         time_since_last_bomb = self.time_elapsed - getattr(self, 'last_bomb_time', -10.0)
@@ -265,7 +265,7 @@ class GameScreen(Screen):
             item_type = 'normal'
 
             if difficulty_level > 0.5 and not getattr(self, 'bomb_protected', False):
-                rand_val = random()
+                rand_val = random.random()
 
                 base_bomb = 0.15
                 chili_chance = min(0.05, 0.01 + (difficulty_level * 0.005))
@@ -305,7 +305,7 @@ class GameScreen(Screen):
             self.last_special_time = self.time_elapsed
             
         base_delay = max(0.8, 1.8 - (difficulty_level * 0.15))
-        next_spawn_delay = base_delay + (randint(-2, 2) * 0.1)
+        next_spawn_delay = base_delay + (random.randint(-2, 2) * 0.1)
         Clock.schedule_once(self.spawn_next_item, next_spawn_delay)
 
     def game_loop(self, dt):
@@ -424,9 +424,9 @@ class GameScreen(Screen):
     def trigger_screenshake(self, magnitude=10):
         duration = 0.04
 
-        anim = Animation(x=rnd.uniform(-magnitude, magnitude), y=rnd.uniform(-magnitude, magnitude), duration=duration, t='linear') #
-        anim += Animation(x=rnd.uniform(-magnitude, magnitude), y=rnd.uniform(-magnitude, magnitude), duration=duration, t='linear') #
-        anim += Animation(x=rnd.uniform(-magnitude, magnitude), y=rnd.uniform(-magnitude, magnitude), duration=duration, t='linear') #
+        anim = Animation(x=random.uniform(-magnitude, magnitude), y=random.uniform(-magnitude, magnitude), duration=duration, t='linear') #
+        anim += Animation(x=random.uniform(-magnitude, magnitude), y=random.uniform(-magnitude, magnitude), duration=duration, t='linear') #
+        anim += Animation(x=random.uniform(-magnitude, magnitude), y=random.uniform(-magnitude, magnitude), duration=duration, t='linear') #
         anim += Animation(x=0, y=0, duration=duration, t='out_quad') #
 
         anim.start(self)
@@ -670,7 +670,7 @@ class GameScreen(Screen):
         item.is_frenzy_bonus = True
 
         item.y = -50
-        item.x = randint(100, Window.width - 100)
+        item.x = random.randint(100, Window.width - 100)
         
         insert_idx = len(self.children) - 1 if len(self.children) > 0 else 0
         self.add_widget(item, index=insert_idx)
