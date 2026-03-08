@@ -18,12 +18,12 @@ The core loop involves slicing ingredients as they are tossed onto the screen.
 - **Slicing**: Click and drag your mouse (or swipe on touchscreens) across ingredients.
 - **Avoid Bombs**: Slicing a bomb results in an immediate loss of a life.
 - **Save Ingredients**: Don't let precious food fall off the bottom of the screen!
-
-## Gameplay Mechanics
-The core loop involves slicing ingredients as they are tossed onto the screen.
-- **Slicing**: Click and drag your mouse (or swipe on touchscreens) across ingredients.
-- **Avoid Bombs**: Slicing a bomb results in an immediate loss of a life.
-- **Save Ingredients**: Don't let precious food fall off the bottom of the screen!
+## Scoring & Item Types
+Different items provide different points and effects:
+- **Meat (Normal)**: Basic ingredient, provides standard points.
+- **Vegetables**: Healthy choice, provides standard points.
+- **Golden Meat**: Rare item that grants bonus points and visual effects.
+- **Bomb (Charcoal)**: To be avoided! Slicing these will cost you a life.
 
 ## Controls & Input
 **Mookata Ninja** is designed for intuitive play across devices.
