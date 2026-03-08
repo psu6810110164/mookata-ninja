@@ -1,10 +1,11 @@
+from random import choice, randint, uniform
 from math import sqrt
-from random import randint, choice
-from kivy.uix.image import Image
-from kivy.core.window import Window
-from kivy.graphics import Color, Ellipse, PushMatrix, PopMatrix, Rotate, Scale
+
 from kivy.animation import Animation
 from kivy.clock import Clock
+from kivy.core.window import Window
+from kivy.graphics import Color, Ellipse, PopMatrix, PushMatrix, Rotate, Scale
+from kivy.uix.image import Image
 
 class FallingItem(Image):
     def __init__(self, difficulty=1.0, item_type='normal', **kwargs):
@@ -19,6 +20,9 @@ class FallingItem(Image):
             self.source = 'assets/images/ice.png'
         elif self.item_type == 'chili':
             self.source = 'assets/images/chili.png'
+        elif self.item_type == 'golden_meat':
+            self.source = 'assets/images/meat.png'
+            self.color = (1, 0.9, 0, 1)  # สีทองสว่าง
         else:
             self.source = choice(['assets/images/ood.png', 'assets/images/vegtb.png', 'assets/images/meat.png', 'assets/images/tomato.png'])
             
@@ -71,6 +75,10 @@ class FallingItem(Image):
                 self.glow_color = Color(0.2, 0.8, 1.0, 0.6)  # สีฟ้าของน้ำแข็ง
                 glow_size = (self.width * 1.3, self.height * 1.3)
                 self.glow = Ellipse(size=glow_size)
+            elif self.item_type == 'golden_meat':
+                self.glow_color = Color(1, 0.8, 0, 0.7)  # แสงฟุ้งสีทอง
+                glow_size = (self.width * 1.6, self.height * 1.6)
+                self.glow = Ellipse(size=glow_size)
             
             PushMatrix()
             self.rot = Rotate()
@@ -88,6 +96,54 @@ class FallingItem(Image):
             Clock.schedule_once(self.start_chili_effects, 0.1)
         elif self.item_type == 'ice':
             Clock.schedule_once(self.start_ice_effects, 0.1)
+        elif self.item_type == 'golden_meat':
+            Clock.schedule_once(self.start_golden_effects, 0.1)
+
+    def start_golden_effects(self, dt):
+        # เอฟเฟกต์หมูทองขยายตัวเบาๆ ให้ดูมีพลัง
+        pulse = Animation(x=1.1, y=1.1, duration=0.4) + \
+                Animation(x=1.0, y=1.0, duration=0.4)
+        pulse.repeat = True
+        pulse.start(self.scale)
+        
+        # ให้แสง Glow กระพริบแบบนุ่มนวล
+        glow_anim = Animation(a=0.4, duration=0.6) + Animation(a=0.9, duration=0.6)
+        glow_anim.repeat = True
+        glow_anim.start(self.glow_color)
+
+        # เริ่มสร้างประกายวิบวับ
+        Clock.schedule_interval(self.spawn_sparkle, 0.15)
+
+    def spawn_sparkle(self, dt):
+        if not self.parent:
+            return False
+            
+        from random import uniform
+        sx = self.center_x + uniform(-self.width/2, self.width/2)
+        sy = self.center_y + uniform(-self.height/2, self.height/2)
+        
+        with self.canvas.after:
+            spark_color = Color(1, 1, 0.5, 1) # สีเหลืองอ่อน
+            sparkle_size = uniform(5, 12)
+            sparkle = Ellipse(pos=(sx, sy), size=(sparkle_size, sparkle_size))
+            
+        # Animation ให้ประกายพุ่งขึ้นและจางหาย
+        # 1. เลื่อนและย่อขนาด (ทำที่ตัว Ellipse)
+        anim_move = Animation(pos=(sx + uniform(-20, 20), sy + 30), size=(0, 0), duration=0.5)
+        # 2. จางสี (ทำที่ตัว Color)
+        anim_fade = Animation(a=0, duration=0.5)
+        
+        def cleanup(anim, widget):
+            # ลบทั้งคู่ภายหลัง
+            try:
+                self.canvas.after.remove(spark_color)
+                self.canvas.after.remove(sparkle)
+            except:
+                pass
+            
+        anim_move.bind(on_complete=cleanup)
+        anim_move.start(sparkle)
+        anim_fade.start(spark_color)
 
     def start_chili_effects(self, dt):
         pulse_anim = Animation(x=1.3, y=1.3, duration=0.15, t='out_quad') + \

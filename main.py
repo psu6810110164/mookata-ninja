@@ -1,23 +1,63 @@
 import math
-import time
-from random import randint, random
-from kivy.app import App
-from kivy.uix.screenmanager import ScreenManager, Screen
-from kivy.lang import Builder
-from kivy.core.window import Window
 import os
-from kivy.graphics import Color, Mesh, Ellipse, Rectangle, PushMatrix, PopMatrix, Rotate
-from kivy.clock import Clock
-from game_objects import FallingItem
-from kivy.animation import Animation
-from kivy.uix.image import Image
+import random
+import time
 from math import sqrt
-import random as rnd
+
+from kivy.animation import Animation
+from kivy.app import App
+from kivy.clock import Clock
+from kivy.core.window import Window
+from kivy.graphics import Color, Ellipse, Mesh, PushMatrix, PopMatrix, Rectangle, Rotate
+from kivy.lang import Builder
+from kivy.metrics import sp
+from kivy.uix.image import Image
+from kivy.uix.label import Label
+from kivy.uix.screenmanager import Screen, ScreenManager
+
 from audio_manager import AudioManager
+from game_objects import FallingItem
 
 Window.size = (800, 450)
 
 Builder.load_file('mookata.kv')
+
+class FloatingLabel(Label):
+    def __init__(self, text, pos, color=(1, 1, 1, 1), **kwargs):
+        super().__init__(**kwargs)
+        self.text = text
+        self.font_name = 'assets/fonts/Bangers.ttf'
+        self.font_size = sp(20) # ใช้ numeric value
+        self.color = color
+        self.bold = True
+        self.center = pos
+        self.outline_color = (0, 0, 0, 1)
+        self.outline_width = 2
+        
+        # สุ่มการเอียงเล็กน้อย
+        angle = random.uniform(-15, 15)
+        
+        with self.canvas.before:
+            PushMatrix()
+            self.rot = Rotate(angle=angle, origin=self.center)
+        with self.canvas.after:
+            PopMatrix()
+            
+        self.bind(pos=self.update_canvas, size=self.update_canvas)
+
+        # Animation: ขยายขนาด (Pop) และลอยขึ้นพร้อมจางหาย
+        anim = Animation(font_size=sp(40), duration=0.1, t='out_back') + \
+               Animation(y=self.y + 100, opacity=0, duration=0.7, t='out_quad')
+        
+        anim.bind(on_complete=self.remove_self)
+        anim.start(self)
+        
+    def update_canvas(self, *args):
+        self.rot.origin = self.center
+
+    def remove_self(self, anim, widget):
+        if self.parent:
+            self.parent.remove_widget(self)
 
 class SlicedHalf(Image):
     def __init__(self, orig_texture, is_left, orig_center, orig_size, slash_angle, **kwargs):
@@ -84,8 +124,8 @@ class MainMenuScreen(Screen):
         if hasattr(app, 'audio_manager'):
             app.audio_manager.play_bgm()
 
-class SettingsScreen(Screen):
 
+class SettingsScreen(Screen):
     def on_volume_change(self, current_volume):
         safe_volume = max(0, min(1, current_volume))
         print(f"Volume is now: {safe_volume}")
@@ -208,9 +248,10 @@ class GameScreen(Screen):
         difficulty_level = min(8.0, raw_difficulty)
     
         spawn_count = 1
-        if difficulty_level > 1.5: spawn_count = randint(1, 2)
-        if difficulty_level > 3.0: spawn_count = randint(2, 4)
-        if difficulty_level > 5.0: spawn_count = randint(3, 5)
+        spawn_count = 1
+        if difficulty_level > 1.5: spawn_count = random.randint(1, 2)
+        if difficulty_level > 3.0: spawn_count = random.randint(2, 4)
+        if difficulty_level > 5.0: spawn_count = random.randint(3, 5)
         
         active_bombs = sum(1 for item in self.game_objects if getattr(item, 'item_type', '') == 'bomb')
         time_since_last_bomb = self.time_elapsed - getattr(self, 'last_bomb_time', -10.0)
@@ -224,13 +265,14 @@ class GameScreen(Screen):
             item_type = 'normal'
 
             if difficulty_level > 0.5 and not getattr(self, 'bomb_protected', False):
-                rand_val = random()
+                rand_val = random.random()
 
                 base_bomb = 0.15
                 chili_chance = min(0.05, 0.01 + (difficulty_level * 0.005))
                 ice_chance = min(0.10, 0.02 + (difficulty_level * 0.01))
 
                 can_spawn_special = (time_since_last_special > 10.0) and not has_special_item and not special_spawned_this_wave
+                golden_chance = 0.04 # โอกาส 4%
 
                 if rand_val < base_bomb: 
                     if active_bombs < 2 and (time_since_last_bomb > 2.0 or bomb_spawned_this_wave):
@@ -247,6 +289,9 @@ class GameScreen(Screen):
                     if can_spawn_special:
                         item_type = 'ice'
                         special_spawned_this_wave = True
+                
+                elif rand_val > (1.0 - golden_chance):
+                    item_type = 'golden_meat'
                     
             item = FallingItem(difficulty=difficulty_level, item_type=item_type)
             insert_idx = len(self.children) - 1 if len(self.children) > 0 else 0
@@ -260,7 +305,7 @@ class GameScreen(Screen):
             self.last_special_time = self.time_elapsed
             
         base_delay = max(0.8, 1.8 - (difficulty_level * 0.15))
-        next_spawn_delay = base_delay + (randint(-2, 2) * 0.1)
+        next_spawn_delay = base_delay + (random.randint(-2, 2) * 0.1)
         Clock.schedule_once(self.spawn_next_item, next_spawn_delay)
 
     def game_loop(self, dt):
@@ -268,7 +313,7 @@ class GameScreen(Screen):
         self.time_elapsed += dt
         
         for item in self.game_objects[:]:
-            item.update(self.time_scale) # 👇 ใส่ time_scale ตรงนี้
+            item.update(self.time_scale) 
             if item.y < -item.height * 2:
                 self.remove_widget(item)
                 self.game_objects.remove(item)
@@ -300,7 +345,7 @@ class GameScreen(Screen):
                     self.ids.combo_main.text = ""
                     self.ids.combo_highlight.text = ""
                     self.create_bomb_effect(touch.x, touch.y)
-                    self.trigger_screenshake()
+                    self.trigger_screenshake(magnitude=15) # ระเบิดสั่นแรงพิเศษ
                     self.remove_widget(item)
                     self.game_objects.remove(item)
                 elif item.item_type == 'ice':
@@ -319,6 +364,25 @@ class GameScreen(Screen):
                     self.create_slice_effect(item, slash_angle)
                     self.remove_widget(item)
                     self.game_objects.remove(item)
+                elif item.item_type == 'golden_meat':
+                    # ฟันโดนหมูทอง -> เพิ่มหัวใจ
+                    if hasattr(self, 'audio') and hasattr(self.audio, 'play_slash'):
+                        self.audio.play_slash()
+                    
+                    if self.temp_hp < 3:
+                        self.temp_hp += 1
+                        self.update_lives(self.temp_hp)
+                    
+                    # คะแนนลอยสำหรับหมูทอง (สีเหลืองทองโตๆ)
+                    self.show_floating_score("+50 ❤️", (item.center_x, item.center_y), color=(1, 0.9, 0, 1))
+                        
+                    self.score += 50 # ให้คะแนนเยอะเป็นพิเศษ
+                    self.ids.current_score_label.text = f"Score: {self.score}"
+                    
+                    self.create_slice_effect(item, slash_angle)
+                    self.create_hit_effect(touch.x, touch.y) # ใช้เอฟเฟกต์แสงกระจาย
+                    self.remove_widget(item)
+                    self.game_objects.remove(item)
                 else:
                     if hasattr(self, 'audio') and hasattr(self.audio, 'play_slash'):
                         self.audio.play_slash()
@@ -326,12 +390,22 @@ class GameScreen(Screen):
                     is_in_frenzy = getattr(item, 'is_frenzy_bonus', False) or getattr(self, 'is_frenzy', False)
                     
                     if is_in_frenzy:
-                        self.score += 10
+                        points = 10
+                        self.score += points
+                        self.show_floating_score(f"+{points}", (item.center_x, item.center_y), color=(1, 0.3, 0.1, 1))
                     else:
                         if current_time - self.last_hit_time < 1.0: self.combo_count += 1
                         else: self.combo_count = 1
                         self.last_hit_time = current_time
-                        self.score += 10 * self.combo_count
+                        points = 10 * self.combo_count
+                        self.score += points
+                        
+                        # คะแนนลอยปกติ (ถ้ามีคอมโบให้สีเปลี่ยนไปตามความแรง)
+                        score_color = (1, 1, 1, 1)
+                        if self.combo_count >= 5: score_color = (1, 0.8, 0.2, 1) # ทอง
+                        elif self.combo_count >= 3: score_color = (0.2, 1, 0.3, 1) # เขียว
+                        
+                        self.show_floating_score(f"+{points}", (item.center_x, item.center_y), color=score_color)
 
                     self.ids.current_score_label.text = f"Score: {self.score}"
 
@@ -343,13 +417,16 @@ class GameScreen(Screen):
                     self.remove_widget(item)
                     self.game_objects.remove(item)
 
-    def trigger_screenshake(self):
-        magnitude = 10
+    def show_floating_score(self, text, pos, color=(1, 1, 1, 1)):
+        label = FloatingLabel(text=text, pos=pos, color=color)
+        self.add_widget(label)
+
+    def trigger_screenshake(self, magnitude=10):
         duration = 0.04
 
-        anim = Animation(x=rnd.uniform(-magnitude, magnitude), y=rnd.uniform(-magnitude, magnitude), duration=duration, t='linear') #
-        anim += Animation(x=rnd.uniform(-magnitude, magnitude), y=rnd.uniform(-magnitude, magnitude), duration=duration, t='linear') #
-        anim += Animation(x=rnd.uniform(-magnitude, magnitude), y=rnd.uniform(-magnitude, magnitude), duration=duration, t='linear') #
+        anim = Animation(x=random.uniform(-magnitude, magnitude), y=random.uniform(-magnitude, magnitude), duration=duration, t='linear') #
+        anim += Animation(x=random.uniform(-magnitude, magnitude), y=random.uniform(-magnitude, magnitude), duration=duration, t='linear') #
+        anim += Animation(x=random.uniform(-magnitude, magnitude), y=random.uniform(-magnitude, magnitude), duration=duration, t='linear') #
         anim += Animation(x=0, y=0, duration=duration, t='out_quad') #
 
         anim.start(self)
@@ -546,12 +623,36 @@ class GameScreen(Screen):
         self.is_frenzy = True 
         self.bomb_protected = True
         
+        # กวาดระเบิดที่ค้างอยู่บนจอออกให้หมดทันที!
+        for item in self.game_objects[:]:
+            if getattr(item, 'item_type', '') == 'bomb':
+                self.remove_widget(item)
+                self.game_objects.remove(item)
+
+        if 'frenzy_border' in self.ids:
+            border = self.ids.frenzy_border
+            # เคลียร์ Animation เก่าถ้ามี
+            Animation.stop_all(border)
+            # เริ่มการกระพริบที่รวดเร็วและชัดเจน (Pulse Intensity)
+            anim = Animation(opacity=1, duration=0.25) + Animation(opacity=0.2, duration=0.25)
+            anim.repeat = True
+            anim.start(border)
+
         Clock.unschedule(self.stop_frenzy)
         Clock.schedule_interval(self.spawn_frenzy_item, 0.15) 
         Clock.schedule_once(self.stop_frenzy, 2.0) 
 
     def stop_frenzy(self, dt):
         self.is_frenzy = False
+        
+        if 'frenzy_border' in self.ids:
+            border = self.ids.frenzy_border
+            # หยุดการกระพริบทันที
+            Animation.stop_all(border)
+            # จางหายไปอย่างรวดเร็วเพื่อบอกว่า "จบโหมดแล้ว"
+            anim = Animation(opacity=0, duration=0.3)
+            anim.start(border)
+
         Clock.unschedule(self.spawn_frenzy_item)
         
         Clock.schedule_once(self.remove_bomb_protection, 2.0)
@@ -569,7 +670,7 @@ class GameScreen(Screen):
         item.is_frenzy_bonus = True
 
         item.y = -50
-        item.x = randint(100, Window.width - 100)
+        item.x = random.randint(100, Window.width - 100)
         
         insert_idx = len(self.children) - 1 if len(self.children) > 0 else 0
         self.add_widget(item, index=insert_idx)

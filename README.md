@@ -10,7 +10,32 @@
 ### รายละเอียดโปรเจกต์
 เกมแนว Ninja Slash ในธีมหมูกระทะ พัฒนาด้วยภาษา Python และ Kivy Framework
 
-ในโปรเจกต์นี้ ได้ทำการพัฒนาระบบหลักๆ ของเกมดังนี้:
+## Overview
+**Mookata Ninja** is an action-packed arcade game inspired by the "Ninja Slash" genre, reimagined with a delicious Thai BBQ (Mookata) theme. Players must slice through flying ingredients to score points while avoiding hazardous bombs, all within the vibrant world of a sizzling grill.
+
+## Gameplay Mechanics
+The core loop involves slicing ingredients as they are tossed onto the screen.
+- **Slicing**: Click and drag your mouse (or swipe on touchscreens) across ingredients.
+- **Avoid Bombs**: Slicing a bomb results in an immediate loss of a life.
+- **Save Ingredients**: Don't let precious food fall off the bottom of the screen!
+## Scoring & Item Types
+Different items provide different points and effects:
+- **Meat (Normal)**: Basic ingredient, provides standard points.
+- **Vegetables**: Healthy choice, provides standard points.
+- **Golden Meat**: Rare item that grants bonus points and visual effects.
+- **Bomb (Charcoal)**: To be avoided! Slicing these will cost you a life.
+
+## Power-ups & Effects
+Special items appear to change the gameplay dynamic:
+- **Chili**: Triggers a frenzy mode where ingredients appear faster.
+- **Ice**: Slows down the time, making it easier to slice items.
+- **Golden Meat**: Rare spawn that significantly boosts your high score.
+
+## Controls & Input
+**Mookata Ninja** is designed for intuitive play across devices.
+- **Mouse**: Click and drag to create slicing streaks.
+- **Touch**: Swipe your finger across the screen to slice.
+- **Escape**: Pause the game or return to the main menu.
 
 1. **ระบบตรวจสอบการชน (Collision Detection):** - ตรวจสอบพิกัดการลากเมาส์ (Touch) ว่าตัดผ่านวัตถุ (หมู, ผัก, ถ่าน) บนหน้าจอหรือไม่
    - หากฟันโดนของกิน จะได้คะแนนและเกิดเอฟเฟกต์เสียง (Slash)
@@ -27,12 +52,35 @@
 4. **ระบบบันทึกคะแนนสูงสุด (Save Highscore):**
    - ในหน้า Game Over ผู้เล่นสามารถพิมพ์ชื่อเพื่อบันทึกคะแนนที่เล่นได้
    - ระบบจะเซฟชื่อและคะแนนลงในไฟล์ `highscore.txt` และดึงข้อมูลมาแสดงผลในรอบถัดไป
-  
-5. **ระบบไอเทมพิเศษ (Special Items System):**
-   เพิ่มไอเทมพิเศษ 2 ชนิดเพื่อสร้างความหลากหลายและจังหวะใหม่ๆ ในการเล่น ได้แก่ พริก (Chili) และ น้ำแข็ง (Ice)
-   - โหมดพริก (Frenzy Mode): เมื่อฟันโดนพริก ระบบจะเสกไอเทมของกินออกมาจำนวนมากในเวลาสั้นๆ (ระบบจะระงับการคูณคอมโบชั่วคราวเพื่อรักษาสมดุลคะแนนไม่ให้เฟ้อจนเกินไป)
-   - โหมดน้ำแข็ง (Slow-mo Mode): เมื่อฟันโดนน้ำแข็ง เวลาในเกมและวัตถุที่ตกลงมาจะช้าลง 70% ช่วยให้ผู้เล่นมีเวลาตั้งหลักและกวาดคะแนนบนหน้าจอได้ง่ายขึ้น
 
-7. **ระบบปรับความยากอัตโนมัติ (Dynamic Difficulty Scaling):**
-   เมื่อคะแนนสูงขึ้น เกมจะปล่อยไอเทมออกมาเร็วขึ้นและจำนวนมากขึ้น โดยใช้สมการรากที่สอง (Square Root) เพื่อให้กราฟความยากค่อยๆ ไต่ระดับอย่างสมดุล และมีเพดานความยากสูงสุด (Hard Cap) ป้องกันเกมเร็วเกินขีดจำกัด
+## Installation
+To run **Mookata Ninja**, ensure you have Python 3.11 or newer (Python 3.13 is fully supported).
 
+1. **Clone the repository**:
+   ```bash
+   git clone <repository-url>
+   cd mookata-ninja
+   ```
+
+2. **Install Kivy and dependencies**:
+   ```bash
+   python -m pip install kivy==2.3.1 kivy_deps.sdl2 kivy_deps.glew
+   ```
+
+3. **Run the game**:
+   ```bash
+   python main.py
+   ```
+
+## Troubleshooting
+Common issues and their solutions:
+- **Kivy Import Error**: Ensure you are using Kivy 2.3.1 for Python 3.13.
+- **No Sound**: On Windows/Linux, you might need specific `sdl2` libraries.
+- **Window not opening**: Verify your graphics drivers support OpenGL 2.1+.
+
+## Project Structure
+- `main.py`: Entry point and screen management.
+- `game_objects.py`: Logic for falling items and effects.
+- `audio_manager.py`: Handling of bgm and sound effects.
+- `mookata.kv`: UI layout and styling definitions.
+- `assets/`: Directory containing images and audio files.
