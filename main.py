@@ -1,21 +1,22 @@
 import math
-import time
-from random import randint, random
-from kivy.app import App
-from kivy.uix.screenmanager import ScreenManager, Screen
-from kivy.lang import Builder
-from kivy.core.window import Window
 import os
-from kivy.graphics import Color, Mesh, Ellipse, Rectangle, PushMatrix, PopMatrix, Rotate
-from kivy.clock import Clock
-from game_objects import FallingItem
-from kivy.animation import Animation
-from kivy.uix.image import Image
+import random
+import time
 from math import sqrt
-import random as rnd
-from audio_manager import AudioManager
-from kivy.uix.label import Label
+
+from kivy.animation import Animation
+from kivy.app import App
+from kivy.clock import Clock
+from kivy.core.window import Window
+from kivy.graphics import Color, Ellipse, Mesh, PushMatrix, PopMatrix, Rectangle, Rotate
+from kivy.lang import Builder
 from kivy.metrics import sp
+from kivy.uix.image import Image
+from kivy.uix.label import Label
+from kivy.uix.screenmanager import Screen, ScreenManager
+
+from audio_manager import AudioManager
+from game_objects import FallingItem
 
 Window.size = (800, 450)
 
