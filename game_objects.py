@@ -1,10 +1,11 @@
+from random import choice, randint, uniform
 from math import sqrt
-from random import randint, choice
-from kivy.uix.image import Image
-from kivy.core.window import Window
-from kivy.graphics import Color, Ellipse, PushMatrix, PopMatrix, Rotate, Scale
+
 from kivy.animation import Animation
 from kivy.clock import Clock
+from kivy.core.window import Window
+from kivy.graphics import Color, Ellipse, PopMatrix, PushMatrix, Rotate, Scale
+from kivy.uix.image import Image
 
 class FallingItem(Image):
     def __init__(self, difficulty=1.0, item_type='normal', **kwargs):
