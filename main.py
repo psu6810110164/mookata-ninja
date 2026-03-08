@@ -124,8 +124,8 @@ class MainMenuScreen(Screen):
         if hasattr(app, 'audio_manager'):
             app.audio_manager.play_bgm()
 
-class SettingsScreen(Screen):
 
+class SettingsScreen(Screen):
     def on_volume_change(self, current_volume):
         safe_volume = max(0, min(1, current_volume))
         print(f"Volume is now: {safe_volume}")
